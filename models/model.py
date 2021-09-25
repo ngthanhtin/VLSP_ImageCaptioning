@@ -697,13 +697,15 @@ from config import CFG
 
 
 class CNN(nn.Module):
-    def __init__(self,type_='swin'):
+    def __init__(self, is_pretrained=True, type_='swin'):
         super(CNN, self).__init__()
         
         if type_ == 'vit':
-            self.e = vit_deit_base_distilled_patch16_384(pretrained=True)
+            self.e = vit_deit_base_distilled_patch16_384(pretrained=is_pretrained)
+        elif type == 'efficientnetv2':
+            self.e = timm.create_model('efficientnetv2_m', pretrained = is_pretrained)
         else:
-            self.e = swin_base_patch4_window7_224_in22k(pretrained=False)
+            self.e = swin_base_patch4_window7_224_in22k(pretrained=is_pretrained)
             
         for p in self.e.parameters():
             p.requires_grad = True#False

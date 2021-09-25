@@ -126,7 +126,7 @@ print(f'test.shape: {test.shape}')
     
 states = torch.load(CFG.prev_model, map_location = torch.device('cpu'))
 
-encoder = CNN()
+encoder = CNN(is_pretrained=False)
 encoder.load_state_dict(states['encoder'])
 encoder.to(device)
 
