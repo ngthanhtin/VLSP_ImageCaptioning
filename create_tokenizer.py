@@ -16,46 +16,6 @@ train = pd.read_csv('../data/train_captions.csv')
 print(f'train.shape: {train.shape}')
 
 # ====================================================
-# Preprocess functions
-# ====================================================
-
-print("\nLower case..")
-def lowercase(text_original):
-    text_lower = text_original.lower()
-    return(text_lower)
-
-print("\nRemove punctuations..")
-def remove_punctuation(text_original):
-    text_no_punctuation = text_original.translate(str.maketrans('','',string.punctuation))
-    return(text_no_punctuation)
-
-print("\nRemove a single character word..")
-def remove_single_character(text):
-    text_len_more_than1 = ""
-    for word in text.split():
-        if len(word) > 1:
-            text_len_more_than1 += " " + word
-    return(text_len_more_than1)
-
-print("\nRemove words with numeric values..")
-def remove_numeric(text,printTF=False):
-    text_no_numeric = ""
-    for word in text.split():
-        isalpha = word.isalpha()
-        if printTF:
-            print("    {:10} : {:}".format(word,isalpha))
-        if isalpha:
-            text_no_numeric += " " + word
-    return(text_no_numeric)
-
-def text_clean(text_original):
-    text = lowercase(text_original)
-    text = remove_punctuation(text)
-    text = remove_single_character(text)
-    text = remove_numeric(text)
-    return(text)
-
-# ====================================================
 # Tokenizer
 # ====================================================
 class Tokenizer(object):
@@ -120,6 +80,46 @@ class Tokenizer(object):
         return captions
 
 
+# ====================================================
+# Preprocess functions
+# ====================================================
+
+print("\nLower case..")
+def lowercase(text_original):
+    text_lower = text_original.lower()
+    return(text_lower)
+
+print("\nRemove punctuations..")
+def remove_punctuation(text_original):
+    text_no_punctuation = text_original.translate(str.maketrans('','',string.punctuation))
+    return(text_no_punctuation)
+
+print("\nRemove a single character word..")
+def remove_single_character(text):
+    text_len_more_than1 = ""
+    for word in text.split():
+        if len(word) > 1:
+            text_len_more_than1 += " " + word
+    return(text_len_more_than1)
+
+print("\nRemove words with numeric values..")
+def remove_numeric(text,printTF=False):
+    text_no_numeric = ""
+    for word in text.split():
+        isalpha = word.isalpha()
+        if printTF:
+            print("    {:10} : {:}".format(word,isalpha))
+        if isalpha:
+            text_no_numeric += " " + word
+    return(text_no_numeric)
+
+def text_clean(text_original):
+    text = lowercase(text_original)
+    text = remove_punctuation(text)
+    # text = remove_single_character(text)
+    text = remove_numeric(text)
+    return(text)
+
 for i, caption in enumerate(train['captions'].values):
         newcaption = text_clean(caption)
         train["captions"].iloc[i] = newcaption
@@ -128,7 +128,7 @@ for i, caption in enumerate(train['captions'].values):
 # create tokenizer
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train['captions'].values)
-torch.save(tokenizer, 'tokenizer_vi_lowercase.pth')
+torch.save(tokenizer, 'tokenizer_vi_not_remove_single_character.pth')
 print('Saved tokenizer')
 
 lengths = []
@@ -138,8 +138,8 @@ for text in tk0:
     length = len(seq) - 2
     lengths.append(length)
 train['length'] = lengths
-train.to_pickle('train_vi.pkl')
-print('Saved preprocessed train.pkl')
+# train.to_pickle('train_vi.pkl')
+# print('Saved preprocessed train.pkl')
 
 
 print(train['captions'][107])
