@@ -74,7 +74,7 @@ def remove_numeric(text,printTF=False):
 def text_clean(text_original):
     text = lowercase(text_original)
     text = remove_punctuation(text)
-    text = remove_single_character(text)
+    # text = remove_single_character(text)
     text = remove_numeric(text)
     return(text)
 

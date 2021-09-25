@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 
-from sklearn.model_selection import StratifiedKFold, GroupKFold, KFold
+from sklearn.model_selection import StratifiedKFold
 
 import torch
 import torch.nn as nn
@@ -212,8 +212,8 @@ def bms_collate(batch):
     labels = pad_sequence(labels, batch_first = True, padding_value = tokenizer.stoi["<pad>"])
     return torch.stack(imgs), labels, torch.stack(label_lengths).reshape(-1, 1)
 
-tokenizer = torch.load('tokenizer_vi_lowercase.pth')
-print(f"tokenizer.stoi: {tokenizer.stoi}")
+tokenizer = torch.load('./tokenizers/tokenizer_vi_not_remove_single_character.pth')
+# print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 def train_loop(folds, fold):
 
@@ -279,7 +279,7 @@ def train_loop(folds, fold):
 
 #     encoder = Encoder(CFG.model_name, 
 #                       pretrained = True)
-    encoder = CNN()
+    encoder = CNN(is_pretrained=True, type_='efficientnetv2')
 #    encoder.load_state_dict(states['encoder'])
     
     encoder.to(device)
@@ -366,15 +366,14 @@ def train_loop(folds, fold):
                         'decoder_scheduler': decoder_scheduler.state_dict(), 
                         'text_preds': text_preds,
                        },
-                        OUTPUT_DIR+f'{CFG.model_name}_fold{fold}_best_3.pth')
+                        OUTPUT_DIR+f'{CFG.model_name}_fold{fold}_best.pth')
     print("End train loop")
 
 
 
-
+#---------READ DATA--------------------
 
 df = pd.read_csv('../data/train_captions.csv')
-
 
 def read_data(data_frame):
     for i, caption in enumerate(data_frame['captions'].values):
@@ -403,6 +402,7 @@ print(train['length'].min())
 print(f'train.shape: {train.shape}')
 
 
+# ------------------- TRAIN ------------------------
 if CFG.debug:
     CFG.epochs = 1
     train = train.sample(n = CFG.samp_size, random_state = CFG.seed).reset_index(drop = True)

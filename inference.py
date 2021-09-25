@@ -12,7 +12,6 @@ import sys
 sys.path.append('../input/timm-pytorch-image-models/pytorch-image-models-master')
 
 import os
-import time
 import random
 
 
@@ -20,20 +19,14 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 
-from sklearn.model_selection import StratifiedKFold, GroupKFold, KFold
-
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.optim import Adam, SGD
 from torch.utils.data import DataLoader
-from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
-from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealingLR, ReduceLROnPlateau
+from torch.nn.utils.rnn import pad_sequence
 
 import torch.fft
 from config import CFG
 from utils import *
-from dataset import TrainDataset, TestDataset
+from dataset import TestDataset
 from transformation import get_transforms
 from models.model import CNN, DecoderWithAttention
 
@@ -73,7 +66,7 @@ def bms_collate(batch):
     labels = pad_sequence(labels, batch_first = True, padding_value = tokenizer.stoi["<pad>"])
     return torch.stack(imgs), labels, torch.stack(label_lengths).reshape(-1, 1)
 
-tokenizer = torch.load('tokenizer_vi.pth')
+tokenizer = torch.load('./tokenizers/tokenizer_vi_not_remove_single_character.pth')
 # print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 def inference(test_loader, encoder, decoder, tokenizer, device):
@@ -100,14 +93,8 @@ def inference(test_loader, encoder, decoder, tokenizer, device):
     
     return text_preds
 
-
-
-
-
+# ------------------READ DATA---------------
 df = pd.read_csv('../data/vietcap4h-public-test/test_captions.csv')
-
-
-
 
 def get_test_file_path(image_id):
     return CFG.test_path + "/images_public_test/{}".format(image_id)
@@ -126,7 +113,7 @@ print(f'test.shape: {test.shape}')
     
 states = torch.load(CFG.prev_model, map_location = torch.device('cpu'))
 
-encoder = CNN(is_pretrained=False)
+encoder = CNN(is_pretrained=False, type_='swin')
 encoder.load_state_dict(states['encoder'])
 encoder.to(device)
 
@@ -160,7 +147,7 @@ predictions  = inference(test_loader, encoder, decoder, tokenizer, device)
 
 test['id'] = test['file_path'].apply(get_test_id)
 test['captions'] = [f"{text}" for text in predictions]
-# test[['id', 'captions']].to_csv('submission.csv', index=False)
+test[['id', 'captions']].to_csv('submission.csv', index=False)
 
 
 # json
@@ -169,5 +156,5 @@ data = []
 for index, row in test.iterrows():
     captions, id = row['captions'], row['id']
     data.append({'id': id, 'captions': captions})
-with open('submission.json', 'w') as outfile:
+with open('results.json', 'w') as outfile:
     json.dump(data, outfile, ensure_ascii=False, indent=4)

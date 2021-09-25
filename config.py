@@ -9,11 +9,11 @@ import torch
 class CFG:
     debug          = False
     apex           = False
-    max_len        = 36
+    max_len        = 40
     print_freq     = 100
     num_workers    = 4
-    model_name     = 'swintransformer'
-    enc_size       = 1024 #1408
+    model_name     = 'efficientnetv2'
+    enc_size       = 1792 # swin: 1024 #efficientnetb2: 1408
     samp_size      = 10
     size           = 224 # 288 image size
     scheduler      = 'CosineAnnealingWarmRestarts' 
@@ -39,6 +39,6 @@ class CFG:
     train_path     = '../data/viecap4h-public-train/viecap4h-public-train/'
     test_path      = '../data/vietcap4h-public-test/'
     prep_path      = './preprocessed-stuff/'
-    prev_model     = './swintransformer_b2_fold0_best2.pth'
+    prev_model     = './swintransformer_b2_fold0_best_tokenizer_vi.pth'
 
     device         = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')

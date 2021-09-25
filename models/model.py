@@ -699,14 +699,17 @@ from config import CFG
 class CNN(nn.Module):
     def __init__(self, is_pretrained=True, type_='swin'):
         super(CNN, self).__init__()
-        
+        # efficientnetv2_rw_s: (32, 1792, 7, 7) , efficientnetv2_rw_m: (32, 2152, 7, 7), swin: (32, 49, 1024)
+        # efficientnetb2: (32, 1408, 7,7)
+
+        self.type_ = type_
         if type_ == 'vit':
             self.e = vit_deit_base_distilled_patch16_384(pretrained=is_pretrained)
-        elif type == 'efficientnetv2':
-            self.e = timm.create_model('efficientnetv2_m', pretrained = is_pretrained)
+        elif type_ == 'efficientnetv2':
+            self.e = timm.create_model('efficientnetv2_rw_s', pretrained = is_pretrained)
         else:
             self.e = swin_base_patch4_window7_224_in22k(pretrained=is_pretrained)
-            
+        
         for p in self.e.parameters():
             p.requires_grad = True#False
 
@@ -714,7 +717,9 @@ class CNN(nn.Module):
         #batch_size, C, H, W = image.shape
         #x = 2 * image - 1  # ; print('input ',   x.size())        
         x = self.e.forward_features(image) ## (bs,img_max_len,image_dim)
-
+        if self.type_ == "efficientnetv2":
+            x = x.permute(0, 2, 3, 1)
+        
         return x
 
 
