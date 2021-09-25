@@ -401,6 +401,32 @@ train['file_path'] = train['id'].apply(get_train_file_path)
 print(train['length'].min())
 print(f'train.shape: {train.shape}')
 
+# ---------------- CALCULATE MEAN, STD---------------------
+def calculate_mean_std():
+    train_ds = TrainDataset(train, tokenizer, transform = get_transforms(data = 'train'))
+
+    train_loader = DataLoader(train_ds, 
+                              batch_size  = CFG.batch_size, 
+                              shuffle     = True, 
+                              num_workers = CFG.num_workers, 
+                              pin_memory  = True,
+                              drop_last   = True,
+                              collate_fn  = bms_collate)
+
+    print('==> Computing mean and std..')
+    mean = 0.
+    std = 0.
+    for (images, labels, label_lengths) in tqdm(train_loader):
+        inputs = images.float()
+        # Rearrange batch to be the shape of [B, , C, W * H]
+        inputs = inputs.view(inputs.size(0), inputs.size(1), -1)
+        # Compute mean and std here
+        mean += inputs.mean(2).sum(0)/255.0
+        std += inputs.std(2).sum(0)/255.0
+    mean /= len(train_ds)
+    std /= len(train_ds)
+    
+    print(mean, std)
 
 # ------------------- TRAIN ------------------------
 if CFG.debug:
