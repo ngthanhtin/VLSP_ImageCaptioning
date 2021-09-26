@@ -680,13 +680,10 @@ def swin_large_patch4_window7_224_in22k(pretrained=False, **kwargs):
 
 
 import math
-import numpy as np
-from typing import Tuple, Dict, Optional
+from typing import Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.nn.utils.rnn import pack_padded_sequence
 
 from fairseq.models import *
 from fairseq.modules import *
@@ -705,8 +702,10 @@ class CNN(nn.Module):
         self.type_ = type_
         if type_ == 'vit':
             self.e = vit_deit_base_distilled_patch16_384(pretrained=is_pretrained)
-        elif type_ == 'efficientnetv2':
+        elif type_ == 'efficientnetv2-s':
             self.e = timm.create_model('efficientnetv2_rw_s', pretrained = is_pretrained)
+        elif type_ == 'efficientnetv2-m':
+            self.e = timm.create_model('efficientnetv2_rw_m', pretrained = is_pretrained)
         else:
             self.e = swin_base_patch4_window7_224_in22k(pretrained=is_pretrained)
         
@@ -717,7 +716,7 @@ class CNN(nn.Module):
         #batch_size, C, H, W = image.shape
         #x = 2 * image - 1  # ; print('input ',   x.size())        
         x = self.e.forward_features(image) ## (bs,img_max_len,image_dim)
-        if self.type_ == "efficientnetv2":
+        if self.type_ == "efficientnetv2-s" or self.type_ == "efficientnetv2-m":
             x = x.permute(0, 2, 3, 1)
         
         return x
@@ -943,6 +942,7 @@ class DecoderWithAttention(nn.Module):
         awe        = gate * awe
         
         input = torch.cat([embeddings, awe], dim = 1)
+        
         for j, rnn in enumerate(self.decode_step):
             at_h, at_c = rnn(input, (h[j], c[j]))  # (s, decoder_dim)
             input = self.dropout(at_h)
@@ -956,3 +956,4 @@ class DecoderWithAttention(nn.Module):
         predicted_softmax = function(preds, dim = 1)
         
         return predicted_softmax, hidden, None
+    

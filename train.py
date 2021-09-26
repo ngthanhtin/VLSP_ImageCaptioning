@@ -279,7 +279,7 @@ def train_loop(folds, fold):
 
 #     encoder = Encoder(CFG.model_name, 
 #                       pretrained = True)
-    encoder = CNN(is_pretrained=True, type_='efficientnetv2')
+    encoder = CNN(is_pretrained=True, type_=CFG.model_name)
 #    encoder.load_state_dict(states['encoder'])
     
     encoder.to(device)
@@ -402,7 +402,7 @@ print(train['length'].min())
 print(f'train.shape: {train.shape}')
 
 # ---------------- CALCULATE MEAN, STD---------------------
-def calculate_mean_std():
+def calculate_mean_std(): # should use Imagenet mean and std
     train_ds = TrainDataset(train, tokenizer, transform = get_transforms(data = 'train'))
 
     train_loader = DataLoader(train_ds, 
