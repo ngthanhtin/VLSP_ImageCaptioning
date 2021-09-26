@@ -316,7 +316,7 @@ def train_loop(folds, fold):
     criterion = nn.CrossEntropyLoss(ignore_index = tokenizer.stoi["<pad>"])
 #     criterion = seq_anti_focal_cross_entropy_loss()
 
-    best_score = np.inf
+    best_score = 0 #np.inf
     best_loss  = np.inf
     
     for epoch in range(CFG.epochs):
@@ -334,7 +334,8 @@ def train_loop(folds, fold):
         LOGGER.info(f"preds: {text_preds[:5]}")
         
         # scoring
-        score = get_score(valid_labels, text_preds)
+        # score = get_score_levenshtein(valid_labels, text_preds)
+        score = get_score_bleu(valid_labels, text_preds)
         
         if isinstance(encoder_scheduler, ReduceLROnPlateau):
             encoder_scheduler.step(score)
@@ -355,7 +356,7 @@ def train_loop(folds, fold):
         LOGGER.info(f'Epoch {epoch+1} - avg_train_loss: {avg_loss:.4f}  time: {elapsed:.0f}s')
         LOGGER.info(f'Epoch {epoch+1} - Score: {score:.4f}')
         
-        if score < best_score:
+        if score > best_score: # < for Levenhstein, > for BLEU
             best_score = score
             LOGGER.info(f'Epoch {epoch+1} - Save Best Score: {best_score:.4f} Model')
             torch.save({'encoder': encoder.state_dict(), 
@@ -367,6 +368,7 @@ def train_loop(folds, fold):
                         'text_preds': text_preds,
                        },
                         OUTPUT_DIR+f'{CFG.model_name}_fold{fold}_best.pth')
+
     print("End train loop")
 
 

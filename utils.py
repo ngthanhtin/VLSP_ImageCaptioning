@@ -1,11 +1,12 @@
 import torch 
 import Levenshtein
+from nltk.translate.bleu_score import corpus_bleu, sentence_bleu, SmoothingFunction
 import string
 import numpy as np
 import math
 import time
 
-def get_score(y_true, y_pred):
+def get_score_levenshtein(y_true, y_pred):
     scores = []
     for true, pred in zip(y_true, y_pred):
         score = Levenshtein.distance(true, pred)
@@ -13,6 +14,17 @@ def get_score(y_true, y_pred):
     avg_score = np.mean(scores)
     return avg_score
 
+def get_score_bleu(y_true, y_pred):
+    cc = SmoothingFunction()
+    scores = []
+    for true, pred in zip(y_true, y_pred):
+        true = true.split()
+        pred = pred.split()
+        
+        bleu4 = sentence_bleu([true], pred, smoothing_function=cc.method4)
+        scores.append(bleu4)
+    avg_score = np.mean(scores)
+    return avg_score
 
 # Helper functions
 class AverageMeter(object):
