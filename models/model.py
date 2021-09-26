@@ -1,18 +1,12 @@
-
-
-
-
-import math
-from typing import Optional
-
 import torch
 import torch.nn as nn
 
 import timm
 from fairseq.models import *
 from fairseq.modules import *
-from vit import vit_base_patch16_224
-from swin import swin_base_patch4_window7_224_in22k
+
+from models.vit import vit_base_patch16_224
+from models.swin import swin_base_patch4_window7_224_in22k
 
 
 from config import CFG
