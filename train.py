@@ -169,9 +169,7 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
         with torch.no_grad():
             features    = encoder(images)
             predictions = decoder.predict(features, CFG.max_len, tokenizer)
-        print(predictions.shape)
         predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
-        print(predicted_sequence.shape)
         _text_preds        = tokenizer.predict_captions(predicted_sequence)
         
         text_preds.append(_text_preds)

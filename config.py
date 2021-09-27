@@ -21,7 +21,7 @@ class CFG:
     samp_size      = 10
     size           = 224 # 288 image size
     scheduler      = 'CosineAnnealingWarmRestarts' 
-    epochs         = 25
+    epochs         = 15
     T_0            = 50
     T_max          = 4  
     encoder_lr     = 1e-4
@@ -43,6 +43,6 @@ class CFG:
     train_path     = '../data/viecap4h-public-train/viecap4h-public-train/'
     test_path      = '../data/vietcap4h-public-test/'
     prep_path      = './preprocessed-stuff/'
-    prev_model     =  './pretrained_models/swin_fold0_best_21.pth' # './pretrained_models/efficientnetv2_fold0_best_new_normalize.pth' #./swintransformer_b2_fold0_best_tokenizer_vi.pth'
+    prev_model     =  './swin_fold1_best.pth' # './pretrained_models/efficientnetv2_fold0_best_new_normalize.pth' #./swintransformer_b2_fold0_best_tokenizer_vi.pth'
 
-    device         = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    device         = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
