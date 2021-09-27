@@ -37,7 +37,7 @@ class CNN(nn.Module):
         x = self.e.forward_features(image) ## (bs,img_max_len,image_dim)
         if self.type_ == "efficientnetv2-s" or self.type_ == "efficientnetv2-m":
             x = x.permute(0, 2, 3, 1)
-        
+
         return x
 
 
@@ -244,35 +244,4 @@ class DecoderWithAttention(nn.Module):
             embeddings = self.embedding(torch.argmax(preds, -1))
         
         return predictions
-    
-    # beam search
-    def forward_step(self, prev_tokens, hidden, encoder_out, function):
-        
-        h, c = hidden
-        #h, c = h.squeeze(0), c.squeeze(0)
-        h, c = [hi.squeeze(0) for hi in h], [ci.squeeze(0) for ci in c]
-        
-        embeddings = self.embedding(prev_tokens)
-        if embeddings.dim() == 3:
-            embeddings = embeddings.squeeze(1)
-            
-        awe, alpha = self.attention(encoder_out, h[-1])  # (s, encoder_dim), (s, num_pixels)
-        gate       = self.sigmoid(self.f_beta(h[-1]))    # gating scalar, (s, encoder_dim)
-        awe        = gate * awe
-        
-        input = torch.cat([embeddings, awe], dim = 1)
-
-        for j, rnn in enumerate(self.decode_step):
-            at_h, at_c = rnn(input, (h[j], c[j]))  # (s, decoder_dim)
-            input = self.dropout(at_h)
-            h[j]  = at_h
-            c[j]  = at_c
-
-        preds = self.fc(self.dropout(h[-1]))  # (batch_size_t, vocab_size)
-
-        #hidden = (h.unsqueeze(0), c.unsqueeze(0))
-        hidden = [hi.unsqueeze(0) for hi in h], [ci.unsqueeze(0) for ci in c]
-        predicted_softmax = function(preds, dim = 1)
-        
-        return predicted_softmax, hidden, None
     

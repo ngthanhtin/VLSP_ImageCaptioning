@@ -30,7 +30,7 @@ from utils import *
 from dataset import TestDataset
 from transformation import get_transforms
 from models.model import CNN, DecoderWithAttention
-from beam_search import TopKDecoder
+
 device = CFG.device
 
 def init_logger(log_file=OUTPUT_DIR+'train.log'):
@@ -218,6 +218,41 @@ def inference(test_loader, encoder, decoder, tokenizer, device):
     
     return text_preds
 
+def ensemble_inference(test_loader, encoder1, decoder1, encoder2, decoder2, tokenizer, device):
+    
+    encoder1.eval()
+    decoder1.eval()
+    encoder2.eval()
+    decoder2.eval()
+
+    text_preds = []
+    tk0 = tqdm(test_loader, total = len(test_loader))
+    
+    # prepare an array of exponentially decreasing weights
+    alpha = 2.0
+    weights = [np.exp(-i/alpha) for i in range(1, 3)]
+
+    for images in tk0:
+        
+        images = images.to(device)
+        
+        with torch.no_grad():
+            features1 = encoder1(images)
+            predictions1 = decoder1.predict(features1, CFG.max_len, tokenizer)
+
+            features2 = encoder2(images)
+            predictions2 = decoder2.predict(features2, CFG.max_len, tokenizer)
+
+            predictions = (weights[0]*predictions1 + weights[1]*predictions2)/2.
+
+        predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
+        _text_preds = tokenizer.predict_captions(predicted_sequence)
+        text_preds.append(_text_preds)
+        
+    text_preds = np.concatenate(text_preds)
+    
+    return text_preds
+
 # ------------------READ DATA---------------
 df = pd.read_csv('../data/vietcap4h-public-test/test_captions.csv')
 
@@ -231,39 +266,85 @@ test = df
 test['file_path'] = test['id'].apply(get_test_file_path)
 print(f'test.shape: {test.shape}')
 
-
+test_dataset = TestDataset(test, transform = get_transforms(data = 'valid'))
+test_loader  = DataLoader(test_dataset, batch_size = 1, shuffle = False, num_workers = CFG.num_workers)
 # ====================================================
 # load model
 # ====================================================
-    
-states = torch.load(CFG.prev_model, map_location = torch.device('cpu'))
 
-encoder = CNN(is_pretrained=False, type_=CFG.model_name)
-encoder.load_state_dict(states['encoder'])
-encoder.to(device)
+if CFG.ensemble == False:
+    states = torch.load(CFG.prev_model, map_location = torch.device('cpu'))
 
-decoder = DecoderWithAttention(attention_dim = CFG.attention_dim, 
-                               embed_dim     = CFG.embed_dim, 
-                               encoder_dim   = CFG.enc_size,
-                               decoder_dim   = CFG.decoder_dim,
-                               num_layers    = CFG.decoder_layers,
-                               vocab_size    = len(tokenizer), 
-                               dropout       = CFG.dropout, 
-                               device        = device)
-decoder.load_state_dict(states['decoder'])
-decoder.to(device)
+    encoder = CNN(is_pretrained=False, type_=CFG.model_name)
+    encoder.load_state_dict(states['encoder'])
+    encoder.to(device)
 
-del states
-import gc
-gc.collect()
+    decoder = DecoderWithAttention(attention_dim = CFG.attention_dim, 
+                                embed_dim     = CFG.embed_dim, 
+                                encoder_dim   = CFG.enc_size,
+                                decoder_dim   = CFG.decoder_dim,
+                                num_layers    = CFG.decoder_layers,
+                                vocab_size    = len(tokenizer), 
+                                dropout       = CFG.dropout, 
+                                device        = device)
+    decoder.load_state_dict(states['decoder'])
+    decoder.to(device)
 
-# ====================================================
-# inference
-# ====================================================
+    del states
+    import gc
+    gc.collect()
 
-test_dataset = TestDataset(test, transform = get_transforms(data = 'valid'))
-test_loader  = DataLoader(test_dataset, batch_size = 1, shuffle = False, num_workers = CFG.num_workers)
-predictions  = inference_with_beam_search(test_loader, encoder, decoder, tokenizer, device)
+    # Inference
+    predictions  = inference_with_beam_search(test_loader, encoder, decoder, tokenizer, device)
+else:
+    print("Predicting with Ensemble.....")
+    model1 = './pretrained_models/swin_fold0_best_bleu.pth'
+    model2 = './pretrained_models/vit_fold0_best.pth'
+
+    states1 = torch.load(model1, map_location = torch.device('cpu'))
+
+    encoder1 = CNN(is_pretrained=False, type_='swin')
+    encoder1.load_state_dict(states1['encoder'])
+    encoder1.to(device)
+
+    decoder1 = DecoderWithAttention(attention_dim = CFG.attention_dim, 
+                                embed_dim     = CFG.embed_dim, 
+                                encoder_dim   = 1024,
+                                decoder_dim   = CFG.decoder_dim,
+                                num_layers    = CFG.decoder_layers,
+                                vocab_size    = len(tokenizer), 
+                                dropout       = CFG.dropout, 
+                                device        = device)
+    decoder1.load_state_dict(states1['decoder'])
+    decoder1.to(device)
+
+    del states1
+    import gc
+    gc.collect()
+
+    states2 = torch.load(model2, map_location = torch.device('cpu'))
+
+    encoder2 = CNN(is_pretrained=False, type_='vit')
+    encoder2.load_state_dict(states2['encoder'])
+    encoder2.to(device)
+
+    decoder2 = DecoderWithAttention(attention_dim = CFG.attention_dim, 
+                                embed_dim     = CFG.embed_dim, 
+                                encoder_dim   = 768,
+                                decoder_dim   = CFG.decoder_dim,
+                                num_layers    = CFG.decoder_layers,
+                                vocab_size    = len(tokenizer), 
+                                dropout       = CFG.dropout, 
+                                device        = device)
+    decoder2.load_state_dict(states2['decoder'])
+    decoder2.to(device)
+
+    del states2
+    import gc
+    gc.collect()
+
+    # Inference
+    predictions  = ensemble_inference(test_loader, encoder1, decoder1, encoder2, decoder2, tokenizer, device)
 
 # ====================================================
 #  submission to json and csv
