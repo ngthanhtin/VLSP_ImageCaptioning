@@ -169,9 +169,11 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
         with torch.no_grad():
             features    = encoder(images)
             predictions = decoder.predict(features, CFG.max_len, tokenizer)
-            
+        print(predictions.shape)
         predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
+        print(predicted_sequence.shape)
         _text_preds        = tokenizer.predict_captions(predicted_sequence)
+        
         text_preds.append(_text_preds)
         
         # measure elapsed time
@@ -347,7 +349,7 @@ def train_loop(folds, fold):
         elapsed = time.time() - start_time
 
         LOGGER.info(f'Epoch {epoch+1} - avg_train_loss: {avg_loss:.4f}  time: {elapsed:.0f}s')
-        LOGGER.info(f'Epoch {epoch+1} - Score: {score:.4f}')
+        LOGGER.info(f'Epoch {epoch+1} - Score: {score:.4f} - Best Score: {best_score:.4f}')
         
         if score > best_score: # < for Levenhstein, > for BLEU
             best_score = score
@@ -436,4 +438,5 @@ for n, (train_index, val_index) in enumerate(Fold.split(folds, folds['length']))
     folds.loc[val_index, 'fold'] = int(n)
 folds['fold'] = folds['fold'].astype(int)
 
-train_loop(folds, CFG.trn_fold)
+for train_fold in CFG.trn_fold:
+    train_loop(folds, train_fold)

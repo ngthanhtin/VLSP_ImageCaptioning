@@ -38,7 +38,7 @@ class CFG:
     dropout        = 0.5
     seed           = 42
     n_fold         = 4
-    trn_fold       = 0
+    trn_fold       = [0,1,2,3]
     train          = True
     train_path     = '../data/viecap4h-public-train/viecap4h-public-train/'
     test_path      = '../data/vietcap4h-public-test/'
