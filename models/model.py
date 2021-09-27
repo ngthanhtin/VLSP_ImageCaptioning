@@ -6,7 +6,7 @@ from fairseq.models import *
 from fairseq.modules import *
 
 from models.vit import vit_base_patch16_224
-from models.swin import swin_base_patch4_window7_224_in22k
+from models.swin import swin_base_patch4_window7_224_in22k, swin_base_patch4_window7_224
 
 
 from config import CFG
@@ -26,7 +26,8 @@ class CNN(nn.Module):
         elif type_ == 'efficientnetv2-m':
             self.e = timm.create_model('efficientnetv2_rw_m', pretrained = is_pretrained)
         else:
-            self.e = swin_base_patch4_window7_224_in22k(pretrained=is_pretrained)
+            # self.e = swin_base_patch4_window7_224_in22k(pretrained=is_pretrained)
+            self.e = swin_base_patch4_window7_224(pretrained=is_pretrained)
         
         for p in self.e.parameters():
             p.requires_grad = True#False
@@ -37,7 +38,7 @@ class CNN(nn.Module):
         x = self.e.forward_features(image) ## (bs,img_max_len,image_dim)
         if self.type_ == "efficientnetv2-s" or self.type_ == "efficientnetv2-m":
             x = x.permute(0, 2, 3, 1)
-
+        
         return x
 
 
