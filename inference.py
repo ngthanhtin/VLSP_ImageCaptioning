@@ -59,6 +59,7 @@ def seed_torch(seed=42):
 seed_torch(seed = CFG.seed)
 
 tokenizer = torch.load('./tokenizers/tokenizer_vi_not_remove_single_character.pth')
+
 # print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 # def beam_search_predictions(image, beam_index = 3):
@@ -388,7 +389,7 @@ else:
 
 test['id'] = test['file_path'].apply(get_test_id)
 test['captions'] = [f"{text}" for text in predictions]
-# test[['id', 'captions']].to_csv('submission.csv', index=False)
+test[['id', 'captions']].to_csv('submission.csv', index=False)
 
 
 # json

@@ -96,13 +96,6 @@ def train_fn(train_loader, encoder, decoder, criterion,
         predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data
         targets     = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
         
-#         logp = F.log_softmax(predictions, -1)
-#         logp = logp.gather(1, targets.reshape(-1,1)).reshape(-1)
-#         p = logp.exp()
-
-#         loss = - ((1 + p) ** gamma)*logp  #anti-focal
-#         loss = loss.mean()
-    
         loss        = criterion(predictions, targets)
 
         # record loss
