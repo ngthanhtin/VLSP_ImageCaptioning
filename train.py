@@ -205,7 +205,7 @@ def bms_collate(batch):
     labels = pad_sequence(labels, batch_first = True, padding_value = tokenizer.stoi["<pad>"])
     return torch.stack(imgs), labels, torch.stack(label_lengths).reshape(-1, 1)
 
-tokenizer = torch.load('./tokenizers/tokenizer_vi_not_remove_single_character.pth')
+tokenizer = torch.load('./tokenizers/tokenizer_vi_fix.pth')
 # print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 def train_loop(folds, fold):
@@ -391,9 +391,8 @@ def get_train_file_path(image_id):
     return CFG.train_path + "/images_train/{}".format(image_id)
 
 train = read_data(df)
-
 train['file_path'] = train['id'].apply(get_train_file_path)
-print(train['length'].min())
+print("Min length is: ", train['length'].min())
 print(f'train.shape: {train.shape}')
 
 # ---------------- CALCULATE MEAN, STD---------------------

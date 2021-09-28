@@ -58,7 +58,7 @@ def seed_torch(seed=42):
 
 seed_torch(seed = CFG.seed)
 
-tokenizer = torch.load('./tokenizers/tokenizer_vi_not_remove_single_character.pth')
+tokenizer = torch.load('./tokenizers/tokenizer_vi_fix.pth')
 
 # print(f"tokenizer.stoi: {tokenizer.stoi}")
 
@@ -290,6 +290,41 @@ def ensemble_inference(test_loader, encoder1, decoder1, encoder2, decoder2, toke
     
     return text_preds
 
+def test_time_inference(test_loader, encoder1, decoder1, encoder2, decoder2, tokenizer, device):
+    encoder1.eval()
+    decoder1.eval()
+    encoder2.eval()
+    decoder2.eval()
+
+    text_preds = []
+    tk0 = tqdm(test_loader, total = len(test_loader))
+    
+    # prepare an array of exponentially decreasing weights
+    alpha = 2.0
+    # weights = [np.exp(-i/alpha) for i in range(1, 3)]
+    weights = [2/3., 1/3.]
+
+    for images in tk0:
+        
+        images = images.to(device)
+        
+        with torch.no_grad():
+            features1 = encoder1(images)
+            predictions1 = decoder1.predict(features1, CFG.max_len, tokenizer)
+
+            features2 = encoder2(images)
+            predictions2 = decoder2.predict(features2, CFG.max_len, tokenizer)
+
+            predictions = (weights[0]*predictions1 + weights[1]*predictions2)
+
+        predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
+        _text_preds = tokenizer.predict_captions(predicted_sequence)
+        text_preds.append(_text_preds)
+        
+    text_preds = np.concatenate(text_preds)
+    
+    return text_preds
+    
 # ------------------READ DATA---------------
 df = pd.read_csv('../data/vietcap4h-public-test/test_captions.csv')
 
@@ -335,8 +370,8 @@ if CFG.ensemble == False:
     predictions  = inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer, device, beam_size=2)
 else:
     print("Predicting with Ensemble.....")
-    model1 = './pretrained_models/swin_fold0_best_bleu.pth'
-    model2 = './pretrained_models/vit_fold0_best.pth'
+    model1 = './pretrained_models/swin_fold1_best.pth'
+    model2 = './pretrained_models/swin_fold2_best.pth'
 
     states1 = torch.load(model1, map_location = torch.device('cpu'))
 
@@ -361,13 +396,13 @@ else:
 
     states2 = torch.load(model2, map_location = torch.device('cpu'))
 
-    encoder2 = CNN(is_pretrained=False, type_='vit')
+    encoder2 = CNN(is_pretrained=False, type_='swin')
     encoder2.load_state_dict(states2['encoder'])
     encoder2.to(device)
 
     decoder2 = DecoderWithAttention(attention_dim = CFG.attention_dim, 
                                 embed_dim     = CFG.embed_dim, 
-                                encoder_dim   = 768,
+                                encoder_dim   = 1024,
                                 decoder_dim   = CFG.decoder_dim,
                                 num_layers    = CFG.decoder_layers,
                                 vocab_size    = len(tokenizer), 

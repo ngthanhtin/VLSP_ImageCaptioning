@@ -128,7 +128,7 @@ for i, caption in enumerate(train['captions'].values):
 # create tokenizer
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train['captions'].values)
-torch.save(tokenizer, 'tokenizer_vi_not_remove_single_character.pth')
+torch.save(tokenizer, 'tokenizer_vi_fix.pth')
 print('Saved tokenizer')
 
 lengths = []
@@ -142,4 +142,4 @@ train['length'] = lengths
 # print('Saved preprocessed train.pkl')
 
 
-print(train['captions'][107])
+print(len(tokenizer))
