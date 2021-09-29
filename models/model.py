@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+import numpy as np
 import timm
 from fairseq.models import *
 from fairseq.modules import *
@@ -132,6 +133,11 @@ class DecoderWithAttention(nn.Module):
         self.fc            = nn.Linear(decoder_dim, vocab_size)  # linear layer to find scores over vocabulary
         self.init_weights()                                      # initialize some layers with the uniform distribution
 
+        #load pretrained embedding for words
+        pretrained_embeddings =  np.load('embedding_matrix.npy')
+        pretrained_embeddings = torch.FloatTensor(pretrained_embeddings).to(self.device)
+        self.embedding = nn.Embedding.from_pretrained(pretrained_embeddings)
+        
     def init_weights(self):
         self.embedding.weight.data.uniform_(-0.1, 0.1)
         self.fc.bias.data.fill_(0)

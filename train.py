@@ -215,6 +215,7 @@ def train_loop(folds, fold):
     # ====================================================
     # loader
     # ====================================================
+    
     trn_idx = folds[folds['fold'] != fold].index
     val_idx = folds[folds['fold'] == fold].index
    

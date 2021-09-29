@@ -300,7 +300,7 @@ def test_time_inference(test_loader, encoder1, decoder1, encoder2, decoder2, tok
             features2 = encoder2(images)
             predictions2 = decoder2.predict(features2, CFG.max_len, tokenizer)
 
-            predictions = (weights[0]*predictions1 + weights[1]*predictions2)
+            predictions = (weights[0]*predictions1 + weights[1]*predictions2)/2.
 
         predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
         _text_preds = tokenizer.predict_captions(predicted_sequence)
@@ -356,7 +356,7 @@ if CFG.ensemble == False:
 else:
     print("Predicting with Ensemble.....")
     model1 = './pretrained_models/swin_fold1_best.pth'
-    model2 = './pretrained_models/swin_fold2_best.pth'
+    model2 = './pretrained_models/swin_fold0_best.pth'
 
     states1 = torch.load(model1, map_location = torch.device('cpu'))
 

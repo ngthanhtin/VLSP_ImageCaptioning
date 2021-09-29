@@ -9,7 +9,7 @@
 import torch
 
 class CFG:
-    ensemble       = False
+    ensemble       = True
     debug          = False
     apex           = False
     max_len        = 40
@@ -32,8 +32,8 @@ class CFG:
     gradient_accumulation_steps = 1
     max_grad_norm  = 100
     attention_dim  = 256
-    embed_dim      = 512
-    decoder_dim    = 512
+    embed_dim      = 300 # 512
+    decoder_dim    = 300 # 512
     decoder_layers = 2     # number of LSTM layers
     dropout        = 0.5
     seed           = 42
@@ -43,6 +43,6 @@ class CFG:
     train_path     = '../data/viecap4h-public-train/viecap4h-public-train/'
     test_path      = '../data/vietcap4h-public-test/'
     prep_path      = './preprocessed-stuff/'
-    prev_model     =  './pretrained_models/swin_fold2_best.pth' # './pretrained_models/efficientnetv2_fold0_best_new_normalize.pth' #./swintransformer_b2_fold0_best_tokenizer_vi.pth'
+    prev_model     =  './swin_fold3_best.pth' # './pretrained_models/efficientnetv2_fold0_best_new_normalize.pth' #./swintransformer_b2_fold0_best_tokenizer_vi.pth'
 
     device         = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
