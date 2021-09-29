@@ -20,8 +20,10 @@ def get_score_bleu(y_true, y_pred):
     for true, pred in zip(y_true, y_pred):
         true = true.split()
         pred = pred.split()
-        
-        bleu4 = sentence_bleu([true], pred, smoothing_function=cc.method4)
+        if len(pred) == 1:
+            bleu4 = 0.
+        else:
+            bleu4 = sentence_bleu([true], pred, smoothing_function=cc.method4)
         scores.append(bleu4)
     avg_score = np.mean(scores)
     return avg_score
