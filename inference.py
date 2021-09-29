@@ -205,8 +205,10 @@ def inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer,
         
     
         if len(complete_seqs_scores) == 0:
+            print("Can not predict!......")
+            hypotheses.append([""])
             continue
-        
+
         i = complete_seqs_scores.index(max(complete_seqs_scores))
         seq = complete_seqs[i]
 
