@@ -202,7 +202,11 @@ def inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer,
             if step > 50:
                 break
             step += 1
-
+        
+    
+        if len(complete_seqs_scores) == 0:
+            continue
+        
         i = complete_seqs_scores.index(max(complete_seqs_scores))
         seq = complete_seqs[i]
 
