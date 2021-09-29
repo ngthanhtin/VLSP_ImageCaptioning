@@ -134,10 +134,9 @@ class DecoderWithAttention(nn.Module):
         self.init_weights()                                      # initialize some layers with the uniform distribution
 
         #load pretrained embedding for words
-        pretrained_embeddings =  np.load('embedding_matrix.npy')
-        pretrained_embeddings = torch.FloatTensor(pretrained_embeddings).to(self.device)
-        self.embedding = nn.Embedding.from_pretrained(pretrained_embeddings)
-        
+        # pretrained_embeddings =  torch.from_numpy(np.load('./pretrained_embedding/embedding_matrix2.npy'))
+        # self.embedding.weight.data[:vocab_size] = pretrained_embeddings
+
     def init_weights(self):
         self.embedding.weight.data.uniform_(-0.1, 0.1)
         self.fc.bias.data.fill_(0)
