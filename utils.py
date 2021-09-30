@@ -85,6 +85,39 @@ def remove_numeric(text,printTF=False):
             text_no_numeric += " " + word
     return(text_no_numeric)
 
+def fix_error(text_original):
+    #-------------------ERROR-----------
+    # {"id": "20E8C33538.jpg", "captions": "a man in a hospital gown being carried by a man in a wheelchair
+    # co 1 file __NA__: D1E44ACDFF.jpg
+    # {"id": "A91D969AB4.jpg", "captions": "Nhóm người đeo khẩu trang đang nói chuyện với nhau qua một chieecs bàn."}
+    # {"id": "7966EB6B68.jpg", "captions": "Người đàn ông được một người kiểm tra thân nhiệt.d"}
+    # {"id": "FD17DD8D8A.jpg", "captions": "\nNhân viên an ninh áo xanh đang nói chuyện với người phụ nữ áo nâu.viên an ninh."}
+    # {"id": "12F3D17CC2.jpg", "captions": "Một nhóm thanh niên đứng ngoài cửa hàng bán đồ lướt sóng Clairemont.
+    # {"id": "B990C99058.jpg", "captions": "Có nhiều viên nén trên một bao bì có dòng chữ \"HYDROXYCHLORQUINE 200 MG TAB\"."}
+    # {"id": "C82A7C5F48.jpg", "captions": "Một thanh niênđứng ôm vai một người đàn ông lớn tuổi đang ngồi trên ghế."}
+    # {"id": "A90B10C5DD.jpg", "captions": "Các nhân viên y tế đang đưa bệnh nhân nằm trêncáng cứu thương lên xe cứu thương."}
+    # {"id": "2D31F063C0.jpg", "captions": "Bàn tay cầm một nắm tthuốc đặt cạnh phần bụng một người."}
+    if text_original == "a man in a hospital gown being carried by a man in a wheelchair":
+        return "Một người đàn ông mặc quần áo bệnh nhân nằm trên xe lăn."
+    elif text_original == "Nhóm người đeo khẩu trang đang nói chuyện với nhau qua một chieecs bàn.":
+        return "Nhóm người đeo khẩu trang đang nói chuyện với nhau qua một chiếc bàn."
+    elif text_original == "Người đàn ông được một người kiểm tra thân nhiệt.d":
+        return "Người đàn ông được một người kiểm tra thân nhiệt."
+    elif text_original == "Nhân viên an ninh áo xanh đang nói chuyện với người phụ nữ áo nâu.viên an ninh.":
+        return "Nhân viên an ninh áo xanh đang nói chuyện với người phụ nữ áo nâu."
+    elif text_original == "Một nhóm thanh niên đứng ngoài cửa hàng bán đồ lướt sóng Clairemont.":
+        return "Một nhóm thanh niên đứng ngoài cửa hàng bán đồ lướt sóng."
+    elif text_original == "Có nhiều viên nén trên một bao bì có dòng chữ \"HYDROXYCHLORQUINE 200 MG TAB\".":
+        return "Có nhiều viên nén trên một bao bì có dòng chữ."
+    elif text_original == "Một thanh niênđứng ôm vai một người đàn ông lớn tuổi đang ngồi trên ghế.":
+        return "Một thanh niên đứng ôm vai một người đàn ông lớn tuổi đang ngồi trên ghế."
+    elif text_original == "Các nhân viên y tế đang đưa bệnh nhân nằm trêncáng cứu thương lên xe cứu thương.":
+        return "Các nhân viên y tế đang đưa bệnh nhân nằm trên cáng cứu thương lên xe cứu thương."
+    elif text_original == "Bàn tay cầm một nắm tthuốc đặt cạnh phần bụng một người.":
+        return "Bàn tay cầm một nắm thuốc đặt cạnh phần bụng một người."
+    else:
+        return text_original
+
 def text_clean(text_original):
     text = lowercase(text_original)
     text = remove_punctuation(text)
@@ -97,6 +130,7 @@ class Tokenizer(object):
     def __init__(self):
         self.stoi = {}
         self.itos = {}
+        self.stofreq = {}
 
     def __len__(self):
         return len(self.stoi)
@@ -110,6 +144,12 @@ class Tokenizer(object):
         vocab.append('<eos>')
         vocab.append('<pad>')
         for i, s in enumerate(vocab):
+            # count frequency
+            if s not in self.stofreq:
+                self.stofreq[s] = 1
+            else:
+                self.stofreq[s] += 1
+                
             self.stoi[s] = i
         self.itos = {item[1]: item[0] for item in self.stoi.items()}
         

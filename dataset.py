@@ -54,6 +54,7 @@ class TrainDataset(Dataset):
             image     = augmented['image']
         label = self.labels[idx]
         label = self.tokenizer.text_to_sequence(label)
+
         label_length = len(label)
         label_length = torch.LongTensor([label_length])
         return image, torch.LongTensor(label), label_length

@@ -32,6 +32,7 @@ from transformation import get_transforms
 from models.model import CNN, DecoderWithAttention
 
 device = CFG.device
+tokenizer = torch.load('./tokenizers/tokenizer_vi_fix_spelling.pth')
 
 def seed_torch(seed=42):
     random.seed(seed)
@@ -42,10 +43,6 @@ def seed_torch(seed=42):
     torch.backends.cudnn.deterministic = True
 
 seed_torch(seed = CFG.seed)
-
-tokenizer = torch.load('./tokenizers/tokenizer_vi_fix.pth')
-
-# print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 # def beam_search_predictions(image, beam_index = 3):
 #     start = [wordtoix["startseq"]]
@@ -259,41 +256,6 @@ def ensemble_inference(test_loader, encoder1, decoder1, encoder2, decoder2, toke
     # prepare an array of exponentially decreasing weights
     alpha = 2.0
     weights = [np.exp(-i/alpha) for i in range(1, 3)]
-
-    for images in tk0:
-        
-        images = images.to(device)
-        
-        with torch.no_grad():
-            features1 = encoder1(images)
-            predictions1 = decoder1.predict(features1, CFG.max_len, tokenizer)
-
-            features2 = encoder2(images)
-            predictions2 = decoder2.predict(features2, CFG.max_len, tokenizer)
-
-            predictions = (weights[0]*predictions1 + weights[1]*predictions2)/2.
-
-        predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
-        _text_preds = tokenizer.predict_captions(predicted_sequence)
-        text_preds.append(_text_preds)
-        
-    text_preds = np.concatenate(text_preds)
-    
-    return text_preds
-
-def test_time_inference(test_loader, encoder1, decoder1, encoder2, decoder2, tokenizer, device):
-    encoder1.eval()
-    decoder1.eval()
-    encoder2.eval()
-    decoder2.eval()
-
-    text_preds = []
-    tk0 = tqdm(test_loader, total = len(test_loader))
-    
-    # prepare an array of exponentially decreasing weights
-    alpha = 2.0
-    # weights = [np.exp(-i/alpha) for i in range(1, 3)]
-    weights = [2/3., 1/3.]
 
     for images in tk0:
         

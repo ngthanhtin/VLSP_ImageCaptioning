@@ -38,6 +38,7 @@ from transformation import get_transforms
 from models.model import CNN, DecoderWithAttention
 
 device = CFG.device
+tokenizer = torch.load('./tokenizers/tokenizer_vi_fix_spelling.pth')
 
 def init_logger(log_file=OUTPUT_DIR+'train.log'):
     from logging import getLogger, INFO, FileHandler,  Formatter,  StreamHandler
@@ -205,9 +206,6 @@ def bms_collate(batch):
     labels = pad_sequence(labels, batch_first = True, padding_value = tokenizer.stoi["<pad>"])
     return torch.stack(imgs), labels, torch.stack(label_lengths).reshape(-1, 1)
 
-tokenizer = torch.load('./tokenizers/tokenizer_vi_fix.pth')
-# print(f"tokenizer.stoi: {tokenizer.stoi}")
-
 def train_loop(folds, fold):
 
     LOGGER.info(f"========== fold: {fold} training ==========")
@@ -373,7 +371,8 @@ df = pd.read_csv('../data/train_captions.csv')
 
 def read_data(data_frame):
     for i, caption in enumerate(data_frame['captions'].values):
-        newcaption = text_clean(caption)
+        newcaption = fix_error(caption)
+        newcaption = text_clean(newcaption)
         data_frame["captions"].iloc[i] = newcaption
         
     lengths = []
