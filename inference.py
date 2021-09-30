@@ -377,7 +377,7 @@ else:
 
 test['id'] = test['file_path'].apply(get_test_id)
 test['captions'] = [f"{text}" for text in predictions]
-test[['id', 'captions']].to_csv('submission.csv', index=False)
+# test[['id', 'captions']].to_csv('submission.csv', index=False)
 
 
 # json

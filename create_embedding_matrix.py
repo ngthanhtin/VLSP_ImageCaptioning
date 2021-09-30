@@ -30,9 +30,13 @@ def create_embedding_matrix(tokenizer, embedding_file):
 
     
 
-tokenizer = torch.load('./tokenizers/tokenizer_vi_fix.pth')
-# embedding_file = '/home/tinvn/TIN/word2vec_vi_words_300dims.txt'
-embedding_file = '/home/tinvn/TIN/VLSP_ImageCaptioning/vlsp_code/cc.vi.300.vec'
+tokenizer = torch.load('./tokenizers/tokenizer_vi_fix_spelling.pth')
+zero_indexes = [0, 467, 490, 494, 563, 564, 570, 973, 1176, 1281, 1455, 1609, 1610, 1611]
+for i in zero_indexes:
+    print(tokenizer.itos[i])
+
+# embedding_file = './pretrained_embedding/word2vec_vi_words_300dims.txt'
+embedding_file = './pretrained_embedding/cc.vi.300.vec'
 
 # create_embedding_matrix(tokenizer, embedding_file)
 

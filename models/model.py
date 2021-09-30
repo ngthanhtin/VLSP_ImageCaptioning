@@ -135,11 +135,11 @@ class DecoderWithAttention(nn.Module):
         self.init_weights()                                      # initialize some layers with the uniform distribution
 
         #load pretrained embedding for words
-        zero_indexes = [0, 144, 223, 465, 476, 499, 503, 572, 573, 579, 841, 888, 901, 987, 1191, 1237, 1275, 1298, 1473, 1627, 1628, 1629]
-        pretrained_embeddings =  torch.from_numpy(np.load('./pretrained_embedding/embedding_matrix2.npy'))
-        for k in range(vocab_size):
-            if k not in zero_indexes:
-                self.embedding.weight.data[k] = pretrained_embeddings[k]
+        # zero_indexes = [0, 144, 223, 465, 476, 499, 503, 572, 573, 579, 841, 888, 901, 987, 1191, 1237, 1275, 1298, 1473, 1627, 1628, 1629]
+        # pretrained_embeddings =  torch.from_numpy(np.load('./pretrained_embedding/embedding_matrix2.npy'))
+        # for k in range(vocab_size):
+        #     if k not in zero_indexes:
+        #         self.embedding.weight.data[k] = pretrained_embeddings[k]
 
     def init_weights(self):
         self.embedding.weight.data.uniform_(-0.1, 0.1)

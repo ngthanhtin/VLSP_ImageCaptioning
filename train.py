@@ -37,6 +37,9 @@ from dataset import TrainDataset, TestDataset
 from transformation import get_transforms
 from models.model import CNN, DecoderWithAttention
 
+import warnings 
+warnings.filterwarnings('ignore')
+
 device = CFG.device
 tokenizer = torch.load('./tokenizers/tokenizer_vi_fix_spelling.pth')
 
