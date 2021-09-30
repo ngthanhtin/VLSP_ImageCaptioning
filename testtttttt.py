@@ -54,11 +54,11 @@ cc = SmoothingFunction()
 # print(score)
 
 # longer candidate
-from nltk.translate.bleu_score import sentence_bleu
-reference = [['the', 'quick', 'brown', 'fox', 'jumped', 'over', 'the', 'lazy', 'dog']]
-candidate = ['the', 'quick', 'brown', 'fox', 'jumped', 'over', 'the', 'lazy', 'dog', 'from', 'space', 'space', 'space']
-reference = [['a', 'b', 'c']]
-candidate = ['a']
-score = sentence_bleu(reference, candidate, smoothing_function=cc.method4)
-print(score)
+# from nltk.translate.bleu_score import sentence_bleu
+# reference = [['the', 'quick', 'brown', 'fox', 'jumped', 'over', 'the', 'lazy', 'dog']]
+# candidate = ['the', 'quick', 'brown', 'fox', 'jumped', 'over', 'the', 'lazy', 'dog', 'from', 'space', 'space', 'space']
+# reference = [['a', 'b', 'c']]
+# candidate = ['a']
+# score = sentence_bleu(reference, candidate, smoothing_function=cc.method4)
+# print(score)
 

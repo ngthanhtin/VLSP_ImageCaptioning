@@ -36,13 +36,16 @@ embedding_file = '/home/tinvn/TIN/VLSP_ImageCaptioning/vlsp_code/cc.vi.300.vec'
 
 # create_embedding_matrix(tokenizer, embedding_file)
 
-x =  np.load('embedding_matrix2.npy')
+x =  np.load('./pretrained_embedding/embedding_matrix2.npy')
 zeros = np.zeros((embed_size))
 
 num_zeros = 0
+zero_indexes = []
 for word, i in tokenizer.stoi.items():
     if (zeros[0] == x[i]).all():
         num_zeros += 1
+        zero_indexes.append(i)
         continue
 
 print(num_zeros)
+print(zero_indexes)

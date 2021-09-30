@@ -32,8 +32,8 @@ class CFG:
     gradient_accumulation_steps = 1
     max_grad_norm  = 100
     attention_dim  = 256
-    embed_dim      = 512 # 512
-    decoder_dim    = 512 # 512
+    embed_dim      = 300 # 512
+    decoder_dim    = 300 # 512
     decoder_layers = 2     # number of LSTM layers
     dropout        = 0.5
     seed           = 42
