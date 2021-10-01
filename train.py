@@ -41,7 +41,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 device = CFG.device
-tokenizer = torch.load('./tokenizers/tokenizer_vi_fix_spelling.pth')
+tokenizer = torch.load('./tokenizers/tokenizer_vi_fix_special_nouns.pth')
 
 def init_logger(log_file=OUTPUT_DIR+'train.log'):
     from logging import getLogger, INFO, FileHandler,  Formatter,  StreamHandler
@@ -369,34 +369,13 @@ def train_loop(folds, fold):
 
 
 #---------READ DATA--------------------
-
-df = pd.read_csv('../data/train_captions.csv')
-
-def read_data(data_frame):
-    for i, caption in enumerate(data_frame['captions'].values):
-        newcaption = fix_error(caption)
-        newcaption = text_clean(newcaption)
-        data_frame["captions"].iloc[i] = newcaption
-        
-    lengths = []
-    tk0 = tqdm(data_frame['captions'].values, total=len(data_frame))
-    for text in tk0:
-        seq = tokenizer.text_to_sequence(text)
-        length = len(seq)
-        lengths.append(length)
-    
-    data_frame['length'] = lengths
-    print("Max Length: ",data_frame['length'].max())
-    return data_frame
-
-
 def get_train_file_path(image_id):
     return CFG.train_path + "/images_train/{}".format(image_id)
 
-train = read_data(df)
+train = pd.read_pickle('./train_files/train_vi_fix_special_nouns.pkl')
 train['file_path'] = train['id'].apply(get_train_file_path)
 print("Min length is: ", train['length'].min())
-print(f'train.shape: {train.shape}')
+print("Max length is: ", train['length'].max())
 
 # ---------------- CALCULATE MEAN, STD---------------------
 def calculate_mean_std(): # should use Imagenet mean and std

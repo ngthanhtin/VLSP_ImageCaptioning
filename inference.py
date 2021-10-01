@@ -321,6 +321,7 @@ if CFG.ensemble == False:
 
     # Inference
     predictions  = inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer, device, beam_size=2)
+    # predictions = inference(test_loader, encoder, decoder, tokenizer, device)
 else:
     print("Predicting with Ensemble.....")
     model1 = './pretrained_models/swin_fold1_best.pth'
