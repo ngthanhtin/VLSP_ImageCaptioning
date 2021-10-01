@@ -5,3 +5,8 @@ __pycache__/
 *.pth
 *.log
 *.pkl
+testtttttt.py
+pretrained_embedding/
+submissions/
+tokenizers/
+train_files/
