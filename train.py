@@ -330,7 +330,8 @@ def train_loop(folds, fold):
         
         # scoring
         # score = get_score_levenshtein(valid_labels, text_preds)
-        score = get_score_bleu(valid_labels, text_preds)
+        # score = get_score_bleu(valid_labels, text_preds) # wrong
+        score = get_corpus_bleu(valid_labels, text_preds)
         
         if isinstance(encoder_scheduler, ReduceLROnPlateau):
             encoder_scheduler.step(score)

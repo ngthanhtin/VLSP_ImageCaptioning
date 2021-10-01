@@ -14,6 +14,10 @@ def get_score_levenshtein(y_true, y_pred):
     avg_score = np.mean(scores)
     return avg_score
 
+def get_corpus_bleu(refs, hyps):
+    bleu4 = corpus_bleu(refs, hyps)
+    return bleu4
+
 def get_score_bleu(y_true, y_pred):
     cc = SmoothingFunction()
     scores = []
