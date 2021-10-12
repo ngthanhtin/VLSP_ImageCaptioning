@@ -8,7 +8,8 @@ from fairseq.models import *
 from fairseq.modules import *
 
 from models.vit import vit_base_patch16_224
-from models.swin import swin_base_patch4_window7_224_in22k, swin_base_patch4_window7_224
+from models.swin import swin_base_patch4_window7_224
+from models.tnt import tnt_b_patch16_224_ex
 
 
 from config import CFG
@@ -27,9 +28,11 @@ class CNN(nn.Module):
             self.e = timm.create_model('efficientnetv2_rw_s', pretrained = is_pretrained)
         elif type_ == 'efficientnetv2-m':
             self.e = timm.create_model('efficientnetv2_rw_m', pretrained = is_pretrained)
-        else:
-            # self.e = swin_base_patch4_window7_224_in22k(pretrained=is_pretrained)
+        elif type_ == 'swin':
             self.e = swin_base_patch4_window7_224(pretrained=is_pretrained)
+        elif type_ == 'tnt':
+            self.e = tnt_b_patch16_224_ex(pretrained=is_pretrained)
+
         
         for p in self.e.parameters():
             p.requires_grad = True#False

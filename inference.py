@@ -32,7 +32,8 @@ from transformation import get_transforms
 from models.model import CNN, DecoderWithAttention
 
 device = CFG.device
-tokenizer = torch.load('./tokenizers/tokenizer_vi_fix_spelling.pth')
+
+tokenizer = torch.load(CFG.tokenizer_path)
 
 def seed_torch(seed=42):
     random.seed(seed)
@@ -43,42 +44,6 @@ def seed_torch(seed=42):
     torch.backends.cudnn.deterministic = True
 
 seed_torch(seed = CFG.seed)
-
-# def beam_search_predictions(image, beam_index = 3):
-#     start = [wordtoix["startseq"]]
-#     start_word = [[start, 0.0]]
-#     while len(start_word[0][0]) < max_length:
-#         temp = []
-#         for s in start_word:
-#             par_caps = sequence.pad_sequences([s[0]], maxlen=max_length, padding='post')
-#             preds = model.predict([image,par_caps], verbose=0)
-#             word_preds = np.argsort(preds[0])[-beam_index:]
-#             # Getting the top <beam_index>(n) predictions and creating a 
-#             # new list so as to put them via the model again
-#             for w in word_preds:
-#                 next_cap, prob = s[0][:], s[1]
-#                 next_cap.append(w)
-#                 prob += preds[0][w]
-#                 temp.append([next_cap, prob])
-                    
-#         start_word = temp
-#         # Sorting according to the probabilities
-#         start_word = sorted(start_word, reverse=False, key=lambda l: l[1])
-#         # Getting the top words
-#         start_word = start_word[-beam_index:]
-    
-#     start_word = start_word[-1][0]
-#     intermediate_caption = [ixtoword[i] for i in start_word]
-#     final_caption = []
-    
-#     for i in intermediate_caption:
-#         if i != 'endseq':
-#             final_caption.append(i)
-#         else:
-#             break
-    
-#     final_caption = ' '.join(final_caption[1:])
-#     return final_caption
 
 def inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer, device, beam_size=3):
 
@@ -370,7 +335,7 @@ else:
     gc.collect()
 
     # Inference
-    predictions  = ensemble_inference(test_loader, encoder1, decoder1, encoder2, decoder2, tokenizer, device)
+    predictions  = inference_with_batched_beam_search(test_loader, encoder1, decoder1, encoder2, decoder2, tokenizer, device)
 
 # ====================================================
 #  submission to json and csv
@@ -386,6 +351,6 @@ import json
 data = []
 for index, row in test.iterrows():
     captions, id = row['captions'], row['id']
-    data.append({'id': id, 'captions': captions[2:]})
+    data.append({'id': id, 'captions': captions})
 with open('results.json', 'w') as outfile:
     json.dump(data, outfile, ensure_ascii=False, indent=4)

@@ -25,7 +25,7 @@ for i, caption in enumerate(train['captions'].values):
 # create tokenizer
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train['captions'].values)
-torch.save(tokenizer, 'tokenizer_vi_fix_special_nouns.pth')
+torch.save(tokenizer, 'tokenizer_vi_fix_error.pth')
 print('Saved tokenizer')
 
 lengths = []
@@ -35,8 +35,8 @@ for text in tk0:
     length = len(seq) - 2
     lengths.append(length)
 train['length'] = lengths
-train.to_pickle('train_vi_fix_special_nouns.pkl')
-print('Saved preprocessed train.pkl')
+# train.to_pickle('train_vi_fix_error_dataset.pkl')
+# print('Saved preprocessed train dataset')
 
 
 print(len(tokenizer))

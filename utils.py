@@ -15,7 +15,20 @@ def get_score_levenshtein(y_true, y_pred):
     return avg_score
 
 def get_corpus_bleu(refs, hyps):
-    bleu4 = corpus_bleu(refs, hyps)
+    cc = SmoothingFunction()
+
+    list_refs = []
+    list_hyps = []
+    for ref in refs:
+        list_refs.append(ref.split(' '))
+    for hyp in hyps:
+        list_hyps.append(hyp.split(' '))
+
+    bleu4 = corpus_bleu(list_refs, list_hyps, smoothing_function=cc.method4)
+    # bleu1 = corpus_bleu(list_refs, list_hyps, weights=(1.0, 0, 0, 0))
+    # bleu2 = corpus_bleu(list_refs, list_hyps, weights=(0.5, 0.5, 0, 0))
+    # bleu3 = corpus_bleu(list_refs, list_hyps, weights=(0.3, 0.3, 0.3, 0))
+
     return bleu4
 
 def get_score_bleu(y_true, y_pred):
@@ -85,11 +98,13 @@ def remove_numeric(text,printTF=False):
         isalpha = word.isalpha()
         if printTF:
             print("    {:10} : {:}".format(word,isalpha))
+        # if isalpha:
+        #     if i == 0:
+        #         text_no_numeric += word
+        #     else:
+        #         text_no_numeric += " " + word
         if isalpha:
-            if i == 0:
-                text_no_numeric += word
-            else:
-                text_no_numeric += " " + word
+            text_no_numeric += " " + word
         
     return(text_no_numeric)
 
@@ -115,12 +130,12 @@ def fix_error(text_original):
         return "Người đàn ông được một người kiểm tra thân nhiệt."
 
     if text_original == "Nhân viên an ninh áo xanh đang nói chuyện với người phụ nữ áo nâu.viên an ninh.":
-        return "Nhân viên an ninh áo xanh đang nói chuyện với người phụ nữ áo nâu."
+        return "Nhân viên an ninh áo xanh đang nói chuyện với người phụ nữ áo nâu viên an ninh."
 
-    if text_original == "Một nhóm thanh niên đứng ngoài cửa hàng bán đồ lướt sóng Clairemont.":
-        return "Một nhóm thanh niên đứng ngoài cửa hàng bán đồ lướt sóng Clairemont."
-    if text_original == "Có nhiều viên nén trên một bao bì có dòng chữ \"HYDROXYCHLORQUINE 200 MG TAB\".":
-        return "Có nhiều viên nén trên một bao bì có dòng chữ \"HYDROXYCHLORQUINE 200 MG TAB\"."
+    # if text_original == "Một nhóm thanh niên đứng ngoài cửa hàng bán đồ lướt sóng Clairemont.":
+    #     return "Một nhóm thanh niên đứng ngoài cửa hàng bán đồ lướt sóng Clairemont."
+    # if text_original == "Có nhiều viên nén trên một bao bì có dòng chữ \"HYDROXYCHLORQUINE 200 MG TAB\".":
+    #     return "Có nhiều viên nén trên một bao bì có dòng chữ \"HYDROXYCHLORQUINE 200 MG TAB\"."
 
     if text_original == "Một thanh niênđứng ôm vai một người đàn ông lớn tuổi đang ngồi trên ghế.":
         return "Một thanh niên đứng ôm vai một người đàn ông lớn tuổi đang ngồi trên ghế."
@@ -134,8 +149,8 @@ def fix_error(text_original):
 
 def text_clean(text_original):
     text = lowercase(text_original)
-    if 'covid-19' in text or 'n95' in text or '200' in text: # fix special nouns
-        return (text[:-1]) # remove '.'
+    # if 'covid-19' in text or 'n95' in text or '200' in text: # fix special nouns
+    #     return (text[:-1]) # remove '.'
     text = remove_punctuation(text)
     # text = remove_single_character(text)
     text = remove_numeric(text)
@@ -200,7 +215,7 @@ class Tokenizer(object):
             if i == self.stoi['<eos>'] or i == self.stoi['<pad>']:
                 break
             caption += ' ' + self.itos[i]
-        return caption
+        return caption[1:] # remove the padding at the first index
     
     def predict_captions(self, sequences):
         captions = []

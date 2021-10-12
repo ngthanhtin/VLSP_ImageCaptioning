@@ -12,7 +12,7 @@ class CFG:
     ensemble       = False
     debug          = False
     apex           = False
-    max_len        = 37 # 40
+    max_len        = 40 # 40
     print_freq     = 100
     num_workers    = 4
     model_name     = 'swin'
@@ -43,6 +43,7 @@ class CFG:
     train_path     = '../data/viecap4h-public-train/viecap4h-public-train/'
     test_path      = '../data/vietcap4h-public-test/'
     prep_path      = './preprocessed-stuff/'
+    tokenizer_path = './tokenizers/tokenizer_vi_fix_error.pth'
     prev_model     =  './swin_fold3_best.pth' # './pretrained_models/efficientnetv2_fold0_best_new_normalize.pth' #./swintransformer_b2_fold0_best_tokenizer_vi.pth'
 
     device         = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')

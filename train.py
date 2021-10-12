@@ -36,12 +36,11 @@ from utils import *
 from dataset import TrainDataset, TestDataset
 from transformation import get_transforms
 from models.model import CNN, DecoderWithAttention
-
 import warnings 
 warnings.filterwarnings('ignore')
 
 device = CFG.device
-tokenizer = torch.load('./tokenizers/tokenizer_vi_fix_special_nouns.pth')
+tokenizer = torch.load(CFG.tokenizer_path)
 
 def init_logger(log_file=OUTPUT_DIR+'train.log'):
     from logging import getLogger, INFO, FileHandler,  Formatter,  StreamHandler
@@ -69,6 +68,27 @@ def seed_torch(seed=42):
 seed_torch(seed = CFG.seed)
 
 
+def seq_anti_focal_cross_entropy_loss(logit, truth):
+    gamma = 1.0 # {0.5,1.0}
+
+    logp = F.log_softmax(logit, -1)
+    logp = logp.gather(1, truth.reshape(-1,1)).reshape(-1)
+    p = logp.exp()
+
+    loss = - ((1 + p) ** gamma)*logp  #anti-focal
+    loss = loss.mean()
+    return loss
+
+def seq_focal_cross_entropy_loss(logit, truth):
+    gamma = 1.0 # {0.5,1.0}
+
+    logp = F.log_softmax(logit, -1)
+    logp = logp.gather(1, truth.reshape(-1,1)).reshape(-1)
+    p = logp.exp()
+
+    loss = - ((1 - p) ** gamma)*logp  #anti-focal
+    loss = loss.mean()
+    return loss
 
 def train_fn(train_loader, encoder, decoder, criterion, 
              encoder_optimizer, decoder_optimizer, epoch,
@@ -100,7 +120,13 @@ def train_fn(train_loader, encoder, decoder, criterion,
         predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data
         targets     = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
         
+        #calculate loss
         loss        = criterion(predictions, targets)
+
+         # Add doubly stochastic attention regularization
+        alpha_c = 1. # # regularization parameter for 'doubly stochastic attention', as in the paper
+        loss += alpha_c * ((1. - alphas.sum(dim=1)) ** 2).mean()
+
 
         # record loss
         losses.update(loss.item(), batch_size)
@@ -309,16 +335,16 @@ def train_loop(folds, fold):
     # loop
     # ====================================================
     criterion = nn.CrossEntropyLoss(ignore_index = tokenizer.stoi["<pad>"])
-#     criterion = seq_anti_focal_cross_entropy_loss()
+    # criterion = seq_anti_focal_cross_entropy_loss
+    # criterion = seq_focal_cross_entropy_loss
 
     best_score = 0 #np.inf
-    best_loss  = np.inf
     
     for epoch in range(CFG.epochs):
         print("Epoch: ", epoch)
         start_time = time.time()
         # train
-        avg_loss = train_fn(train_loader, encoder, decoder, criterion, 
+        avg_loss = train_fn(train_loader, encoder, decoder, criterion,
                             encoder_optimizer, decoder_optimizer, epoch, 
                             encoder_scheduler, decoder_scheduler, device)
 
@@ -330,8 +356,8 @@ def train_loop(folds, fold):
         
         # scoring
         # score = get_score_levenshtein(valid_labels, text_preds)
-        # score = get_score_bleu(valid_labels, text_preds) # wrong
-        score = get_corpus_bleu(valid_labels, text_preds)
+        score = get_score_bleu(valid_labels, text_preds)
+        # score = get_corpus_bleu(valid_labels, text_preds)
         
         if isinstance(encoder_scheduler, ReduceLROnPlateau):
             encoder_scheduler.step(score)
@@ -350,7 +376,7 @@ def train_loop(folds, fold):
         elapsed = time.time() - start_time
 
         LOGGER.info(f'Epoch {epoch+1} - avg_train_loss: {avg_loss:.4f}  time: {elapsed:.0f}s')
-        LOGGER.info(f'Epoch {epoch+1} - Score: {score:.4f} - Best Score: {best_score:.4f}')
+        LOGGER.info(f'Epoch {epoch+1} - Score: {score} - Best Score: {best_score}')
         
         if score > best_score: # < for Levenhstein, > for BLEU
             best_score = score
@@ -373,10 +399,42 @@ def train_loop(folds, fold):
 def get_train_file_path(image_id):
     return CFG.train_path + "/images_train/{}".format(image_id)
 
-train = pd.read_pickle('./train_files/train_vi_fix_special_nouns.pkl')
+# train = pd.read_pickle('./train_files/train_vi_fix_special_nouns.pkl')
+# train['file_path'] = train['id'].apply(get_train_file_path)
+# print("Min length is: ", train['length'].min())
+# print("Max length is: ", train['length'].max())
+
+df = pd.read_csv('./train_files/train_captions.csv')
+
+def read_data(data_frame):
+    for i, caption in enumerate(data_frame['captions'].values):
+        caption = fix_error(caption)
+        newcaption = text_clean(caption)
+        data_frame["captions"].iloc[i] = newcaption
+        
+    lengths = []
+    tk0 = tqdm(data_frame['captions'].values, total=len(data_frame))
+    for text in tk0:
+        seq = tokenizer.text_to_sequence(text)
+        length = len(seq)
+        lengths.append(length)
+    
+    data_frame['length'] = lengths
+    print("Max Length: ",data_frame['length'].max())
+    return data_frame
+
+
+def get_train_file_path(image_id):
+    return CFG.train_path + "/images_train/{}".format(image_id)
+
+train = read_data(df)
+
 train['file_path'] = train['id'].apply(get_train_file_path)
-print("Min length is: ", train['length'].min())
-print("Max length is: ", train['length'].max())
+print(train['length'].min())
+print(train['length'].max())
+print(train['length'].mean())
+print(f'train.shape: {train.shape}')
+
 
 # ---------------- CALCULATE MEAN, STD---------------------
 def calculate_mean_std(): # should use Imagenet mean and std
