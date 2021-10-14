@@ -10,13 +10,14 @@ import torch
 
 class CFG:
     ensemble       = False
+    teacher_forcing= True
     debug          = False
     apex           = False
     max_len        = 40 # 40
     print_freq     = 100
     num_workers    = 4
     model_name     = 'swin'
-    enc_size       = 1024
+    enc_size       =  1536 #1024
     
     samp_size      = 10
     size           = 224 # 288 image size
@@ -27,7 +28,7 @@ class CFG:
     encoder_lr     = 1e-4
     decoder_lr     = 4e-4
     min_lr         = 1e-6
-    batch_size     = 32
+    batch_size     = 16
     weight_decay   = 1e-6
     gradient_accumulation_steps = 1
     max_grad_norm  = 100
@@ -43,7 +44,7 @@ class CFG:
     train_path     = '../data/viecap4h-public-train/viecap4h-public-train/'
     test_path      = '../data/vietcap4h-public-test/'
     prep_path      = './preprocessed-stuff/'
-    tokenizer_path = './tokenizers/tokenizer_vi_fix_error.pth'
-    prev_model     =  './swin_fold3_best.pth' # './pretrained_models/efficientnetv2_fold0_best_new_normalize.pth' #./swintransformer_b2_fold0_best_tokenizer_vi.pth'
+    tokenizer_path = './tokenizers/tokenizer_vi_fix_error_english.pth'
+    prev_model     =  './swin_fold2_epoch8_best.pth'
 
-    device         = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    device         = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')

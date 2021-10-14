@@ -25,7 +25,7 @@ for i, caption in enumerate(train['captions'].values):
 # create tokenizer
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train['captions'].values)
-torch.save(tokenizer, 'tokenizer_vi_fix_error.pth')
+torch.save(tokenizer, 'tokenizer_vi_fix_error_english.pth')
 print('Saved tokenizer')
 
 lengths = []
