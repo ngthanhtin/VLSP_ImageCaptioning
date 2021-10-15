@@ -122,7 +122,7 @@ def fix_error(text_original):
     # {"id": "2D31F063C0.jpg", "captions": "Bàn tay cầm một nắm tthuốc đặt cạnh phần bụng một người."}
 
     if text_original == "a man in a hospital gown being carried by a man in a wheelchair":
-        return "Một người đàn ông mặc quần áo bệnh nhân nằm trên xe lăn."
+        return "Một người đàn ông mặc đồ bảo hộ nằm trên xe lăn."
 
     if text_original == "Nhóm người đeo khẩu trang đang nói chuyện với nhau qua một chieecs bàn.":
         return "Nhóm người đeo khẩu trang đang nói chuyện với nhau qua một chiếc bàn."

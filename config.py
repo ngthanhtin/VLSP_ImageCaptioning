@@ -1,7 +1,3 @@
-#  n_channels_dict = {'efficientnet-b0': 1280, 'efficientnet-b1': 1280, 'efficientnet-b2': 1408,
-#   'efficientnet-b3': 1536, 'efficientnet-b4': 1792, 'efficientnet-b5': 2048,
-#   'efficientnet-b6': 2304, 'efficientnet-b7': 2560}
-
 # efficientnetv2-m:2152, #efficientnetb2: 1408, #efficientnetv2-s: 1792 
 # vit_base_patch16_224: 768, vit_base_patch32_224_in21k: 768 =>vit_base_patch16_224 better
 # swin_base_patch4_window7_224_in22k: 1024
@@ -10,7 +6,7 @@ import torch
 
 class CFG:
     ensemble       = False
-    teacher_forcing= True
+    noise_injection= True
     debug          = False
     apex           = False
     max_len        = 40 # 40
@@ -39,12 +35,12 @@ class CFG:
     dropout        = 0.5
     seed           = 42
     n_fold         = 4
-    trn_fold       = [0,1,2,3]
+    trn_fold       = [0]
     train          = True
     train_path     = '../data/viecap4h-public-train/viecap4h-public-train/'
     test_path      = '../data/vietcap4h-public-test/'
     prep_path      = './preprocessed-stuff/'
-    tokenizer_path = './tokenizers/tokenizer_vi_fix_error_english.pth'
-    prev_model     =  './swin_fold2_epoch8_best.pth'
+    tokenizer_path = './tokenizers/tokenizer_vi_fix_error_english2.pth'
+    prev_model     =  './swin_fold0_epoch8_best_remove_english.pth'
 
-    device         = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+    device         = torch.device('cuda:3' if torch.cuda.is_available() else 'cpu')

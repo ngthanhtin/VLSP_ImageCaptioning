@@ -118,8 +118,8 @@ def train_fn(train_loader, encoder, decoder, criterion,
         predictions, caps_sorted, decode_lengths, alphas, sort_ind = decoder(features, labels, label_lengths)
         targets     = caps_sorted[:, 1:]
 
-         #############teacher forcing, exposure bias###############
-        if CFG.teacher_forcing:
+         #############noise injection, exposure bias###############
+        if CFG.noise_injection:
             predict = predictions.argmax(-1)
             
             a = (torch.rand(caps_sorted[:, 1:].shape)>0.8).float().to(CFG.device)
@@ -134,7 +134,7 @@ def train_fn(train_loader, encoder, decoder, criterion,
         targets     = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
         
         ###########################################################
-        if CFG.teacher_forcing:
+        if CFG.noise_injection:
             predictions2 = pack_padded_sequence(predictions2, decode_lengths2, batch_first=True).data
             targets2     = pack_padded_sequence(targets2, decode_lengths2, batch_first=True).data
         ###########################################################
@@ -147,7 +147,7 @@ def train_fn(train_loader, encoder, decoder, criterion,
         loss += alpha_c * ((1. - alphas.sum(dim=1)) ** 2).mean()
 
         ###########################################################
-        if CFG.teacher_forcing:
+        if CFG.noise_injection:
             loss2       = criterion(predictions2, targets2)
             loss        = loss + 0.1*loss2
         ###########################################################
@@ -406,7 +406,7 @@ def train_loop(folds, fold):
         if score > best_score: # < for Levenhstein, > for BLEU
             best_score = score
             LOGGER.info(f'Epoch {epoch+1} - Save Best Score: {best_score:.4f} Model')
-        # if epoch >= 6:
+        if epoch >= 6:
             torch.save({'encoder': encoder.state_dict(), 
                         'encoder_optimizer': encoder_optimizer.state_dict(), 
                         'encoder_scheduler': encoder_scheduler.state_dict(), 
@@ -415,7 +415,7 @@ def train_loop(folds, fold):
                         'decoder_scheduler': decoder_scheduler.state_dict(), 
                         'text_preds': text_preds,
                         },
-                        OUTPUT_DIR+f'{CFG.model_name}_fold{fold}_best_remove_english.pth')
+                        OUTPUT_DIR+f'{CFG.model_name}_fold{fold}_epoch{epoch}_best_remove_english.pth')
 
     print("End train loop")
 

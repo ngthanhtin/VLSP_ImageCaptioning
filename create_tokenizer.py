@@ -25,14 +25,14 @@ for i, caption in enumerate(train['captions'].values):
 # create tokenizer
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train['captions'].values)
-torch.save(tokenizer, 'tokenizer_vi_fix_error_english.pth')
+torch.save(tokenizer, 'tokenizer_vi_fix_error_english2.pth')
 print('Saved tokenizer')
 
 lengths = []
 tk0 = tqdm(train['captions'].values, total=len(train))
 for text in tk0:
     seq = tokenizer.text_to_sequence(text)
-    length = len(seq) - 2
+    length = len(seq)
     lengths.append(length)
 train['length'] = lengths
 # train.to_pickle('train_vi_fix_error_dataset.pkl')
