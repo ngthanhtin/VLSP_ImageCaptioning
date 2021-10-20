@@ -14,8 +14,11 @@ def get_transforms(*, data):
     if data == 'train':
         return Compose([
             Resize(CFG.size, CFG.size),
-            # HorizontalFlip(p=0.5),    
-            # RandomBrightnessContrast(p=0.2),
+            HorizontalFlip(p=0.5),    
+            # Transpose(p=0.5),
+            # VerticalFlip(p=0.5),
+            # ShiftScaleRotate(p=0.5),
+            RandomCrop(height=CFG.size, width=CFG.size, p=0.5),
             Normalize(
                 mean=[0.485, 0.456, 0.406],
                 std=[0.229, 0.224, 0.225],

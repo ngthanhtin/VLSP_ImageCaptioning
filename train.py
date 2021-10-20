@@ -416,6 +416,7 @@ def train_loop(folds, fold):
                         'text_preds': text_preds,
                         },
                         OUTPUT_DIR+f'{CFG.model_name}_fold{fold}_epoch{epoch}_best_remove_english.pth')
+                        # OUTPUT_DIR+f'{CFG.model_name}_fold{fold}_best_remove_english.pth')
 
     print("End train loop")
 

@@ -8,7 +8,7 @@ from fairseq.models import *
 from fairseq.modules import *
 
 from models.vit import vit_base_patch16_224
-from models.swin import swin_base_patch4_window7_224, swin_base_patch4_window12_384, swin_large_patch4_window7_224
+from models.swin import swin_base_patch4_window7_224, swin_base_patch4_window12_384, swin_large_patch4_window7_224, swin_large_patch4_window12_384
 from models.tnt import tnt_b_patch16_224_ex
 
 
@@ -30,6 +30,7 @@ class CNN(nn.Module):
             self.e = timm.create_model('efficientnetv2_rw_m', pretrained = is_pretrained)
         elif type_ == 'swin':
             self.e = swin_large_patch4_window7_224(pretrained=is_pretrained)
+            # self.e = swin_large_patch4_window12_384(pretrained=is_pretrained)
         elif type_ == 'tnt':
             self.e = tnt_b_patch16_224_ex(pretrained=is_pretrained)
 
@@ -139,7 +140,7 @@ class DecoderWithAttention(nn.Module):
 
         #load pretrained embedding for words
         # zero_indexes = [0, 144, 223, 465, 476, 499, 503, 572, 573, 579, 841, 888, 901, 987, 1191, 1237, 1275, 1298, 1473, 1627, 1628, 1629]
-        # pretrained_embeddings =  torch.from_numpy(np.load('./pretrained_embedding/embedding_matrix2.npy'))
+        # pretrained_embeddings =  torch.from_numpy(np.load('./embedding_matrix.npy'))
         # for k in range(vocab_size):
         #     if k not in zero_indexes:
         #         self.embedding.weight.data[k] = pretrained_embeddings[k]

@@ -35,12 +35,13 @@ class CFG:
     dropout        = 0.5
     seed           = 42
     n_fold         = 4
-    trn_fold       = [0]
+    trn_fold       = [0] #0 is best for tokenizer_vi_fix_error_english2
     train          = True
     train_path     = '../data/viecap4h-public-train/viecap4h-public-train/'
-    test_path      = '../data/vietcap4h-public-test/'
+    test_path      = '../data/vietcap4h-private-test/vietcap4h-private-test/'
+    # test_path      = '../data/vietcap4h-public-test/'
     prep_path      = './preprocessed-stuff/'
     tokenizer_path = './tokenizers/tokenizer_vi_fix_error_english2.pth'
-    prev_model     =  './swin_fold0_epoch8_best_remove_english.pth'
+    prev_model     =  '/home/tinvn/TIN/VLSP_ImageCaptioning/vlsp_code/pretrained_models/swin_fold0_epoch14_best_remove_english_0298.pth'
 
-    device         = torch.device('cuda:3' if torch.cuda.is_available() else 'cpu')
+    device         = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')

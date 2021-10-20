@@ -56,7 +56,7 @@ class TestDataset(Dataset):
     def __getitem__(self, idx):
         file_path = self.file_paths[idx]
         image = cv2.imread(file_path)
-        
+
         # trick to overcome dead files
         if image is None:
             #check if jpg or png

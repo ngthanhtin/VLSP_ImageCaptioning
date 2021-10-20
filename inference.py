@@ -244,10 +244,12 @@ def ensemble_inference(test_loader, encoder1, decoder1, encoder2, decoder2, toke
     return text_preds
     
 # ------------------READ DATA---------------
-df = pd.read_csv('../data/vietcap4h-public-test/test_captions.csv')
+df = pd.read_csv('../data/vietcap4h-private-test/vietcap4h-private-test/private_captions.csv')
+# df = pd.read_csv('../data/vietcap4h-public-test/test_captions.csv')
 
 def get_test_file_path(image_id):
-    return CFG.test_path + "/images_public_test/{}".format(image_id)
+    # return CFG.test_path + "/images_public_test/{}".format(image_id)
+    return CFG.test_path + "/images/{}".format(image_id)
 
 def get_test_id(path_file):
     return path_file.split('/')[-1]
@@ -351,6 +353,6 @@ import json
 data = []
 for index, row in test.iterrows():
     captions, id = row['captions'], row['id']
-    data.append({'id': id, 'captions': captions})
+    data.append({'id': id, 'captions': captions[1:]})
 with open('results.json', 'w') as outfile:
     json.dump(data, outfile, ensure_ascii=False, indent=4)
