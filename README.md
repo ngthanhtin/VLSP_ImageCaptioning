@@ -15,9 +15,11 @@ Run `inference.py`.
 
 # Citation
 If you find this code useful for your work, please consider citing:
+```
 @inproceedings{tin2021vieCap4H,
   title={Image Captioning Using Swin Transformer Encoder and LSTM Attention Decoder},
   author={Thanh Tin Nguyen},
   booktitle={VLSP2021 vieCap4H Challenge: Automatic image caption generation for healthcare domains in Vietnamese},
   year={2021}
 }
+```
