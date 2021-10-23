@@ -17,8 +17,8 @@ Run `train.py`.
 Run `inference.py`.
 
 # Results
-Achieved 0.302 BLEU4 for Public Dataset.</b>
-Achieved 0.293 BLEU4 for Private Dataset. As a result, I achived the 4th on the leaderboard.</b>
+Achieved 0.302 BLEU4 for Public Dataset.</br>
+Achieved 0.293 BLEU4 for Private Dataset. As a result, I achived the 4th on the leaderboard.</br>
 
 # Citation
 If you find this code useful for your work, please consider citing:
