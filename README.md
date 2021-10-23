@@ -8,10 +8,17 @@ https://aihub.vn/competitions/40#participate
 In this repo, I convert the json to csv format for easy processing.</br>
 In `json2txt.py`, specify the caption `file_path` in `json` format, and caption destination `dest_path` in `csv` format.
 
+# Model
+This code uses Swin Transformer (you can change to other types of Transformer) as the Encoder and LSTM Attention as the Decoder.
+
 # Training
 Run `train.py`.
 # Inference
 Run `inference.py`.
+
+# Results
+Achieved 0.302 BLEU4 for Public Dataset.</b>
+Achieved 0.293 BLEU4 for Private Dataset. As a result, I achived the 4th on the leaderboard.</b>
 
 # Citation
 If you find this code useful for your work, please consider citing:
