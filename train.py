@@ -406,7 +406,7 @@ def train_loop(folds, fold):
         if score > best_score: # < for Levenhstein, > for BLEU
             best_score = score
             LOGGER.info(f'Epoch {epoch+1} - Save Best Score: {best_score:.4f} Model')
-        if epoch >= 6:
+        if epoch == 7:
             torch.save({'encoder': encoder.state_dict(), 
                         'encoder_optimizer': encoder_optimizer.state_dict(), 
                         'encoder_scheduler': encoder_scheduler.state_dict(), 
