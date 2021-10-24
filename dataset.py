@@ -26,7 +26,7 @@ class TrainDataset(Dataset):
     def __getitem__(self, idx):
         file_path = self.file_paths[idx]
         image = cv2.imread(file_path)
-
+        
         try:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
         except:
@@ -37,7 +37,6 @@ class TrainDataset(Dataset):
             image     = augmented['image']
         label = self.labels[idx]
         label = self.tokenizer.text_to_sequence(label)
-
         label_length = len(label)
         label_length = torch.LongTensor([label_length])
         return image, torch.LongTensor(label), label_length
@@ -56,7 +55,7 @@ class TestDataset(Dataset):
     def __getitem__(self, idx):
         file_path = self.file_paths[idx]
         image = cv2.imread(file_path)
-
+        
         # trick to overcome dead files
         if image is None:
             #check if jpg or png
