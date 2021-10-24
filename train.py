@@ -35,11 +35,10 @@ from config import CFG
 from utils import *
 from dataset import TrainDataset, TestDataset
 from transformation import get_transforms
-from models.model import CNN, DecoderWithAttention
-import warnings 
-warnings.filterwarnings('ignore')
+from models.model import CNN, Net
 
 device = CFG.device
+
 tokenizer = torch.load(CFG.tokenizer_path)
 
 def init_logger(log_file=OUTPUT_DIR+'train.log'):
@@ -68,16 +67,123 @@ def seed_torch(seed=42):
 seed_torch(seed = CFG.seed)
 
 
-def seq_anti_focal_cross_entropy_loss(logit, truth):
-    gamma = 1.0 # {0.5,1.0}
+from torch.optim.optimizer import Optimizer
+import itertools as it
 
-    logp = F.log_softmax(logit, -1)
-    logp = logp.gather(1, truth.reshape(-1,1)).reshape(-1)
-    p = logp.exp()
+class RAdam(Optimizer):
 
-    loss = - ((1 + p) ** gamma)*logp  #anti-focal
-    loss = loss.mean()
-    return loss
+    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=0):
+        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
+        self.buffer = [[None, None, None] for ind in range(10)]
+        super(RAdam, self).__init__(params, defaults)
+
+    def __setstate__(self, state):
+        super(RAdam, self).__setstate__(state)
+
+    def step(self, closure=None):
+
+        loss = None
+        if closure is not None:
+            loss = closure()
+
+        for group in self.param_groups:
+
+            for p in group['params']:
+                if p.grad is None:
+                    continue
+                grad = p.grad.data.float()
+                if grad.is_sparse:
+                    raise RuntimeError('RAdam does not support sparse gradients')
+
+                p_data_fp32 = p.data.float()
+
+                state = self.state[p]
+
+                if len(state) == 0:
+                    state['step'] = 0
+                    state['exp_avg'] = torch.zeros_like(p_data_fp32)
+                    state['exp_avg_sq'] = torch.zeros_like(p_data_fp32)
+                else:
+                    state['exp_avg'] = state['exp_avg'].type_as(p_data_fp32)
+                    state['exp_avg_sq'] = state['exp_avg_sq'].type_as(p_data_fp32)
+
+                exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
+                beta1, beta2 = group['betas']
+
+                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value = 1 - beta2)
+                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
+
+                state['step'] += 1
+                buffered = self.buffer[int(state['step'] % 10)]
+                if state['step'] == buffered[0]:
+                    N_sma, step_size = buffered[1], buffered[2]
+                else:
+                    buffered[0] = state['step']
+                    beta2_t = beta2 ** state['step']
+                    N_sma_max = 2 / (1 - beta2) - 1
+                    N_sma = N_sma_max - 2 * state['step'] * beta2_t / (1 - beta2_t)
+                    buffered[1] = N_sma
+
+                    # more conservative since it's an approximated value
+                    if N_sma >= 5:
+                        step_size = math.sqrt((1 - beta2_t) * (N_sma - 4) / (N_sma_max - 4) * (N_sma - 2) / N_sma * N_sma_max / (N_sma_max - 2)) / (1 - beta1 ** state['step'])
+                    else:
+                        step_size = 1.0 / (1 - beta1 ** state['step'])
+                    buffered[2] = step_size
+
+                if group['weight_decay'] != 0:
+                    p_data_fp32.add_(-group['weight_decay'] * group['lr'], p_data_fp32)
+
+                # more conservative since it's an approximated value
+                if N_sma >= 5:
+                    denom = exp_avg_sq.sqrt().add_(group['eps'])
+                    p_data_fp32.addcdiv_(exp_avg, denom, value=-step_size * group['lr'])
+                else:
+                    p_data_fp32.add_(exp_avg, alpha=-step_size * group['lr'])
+
+                p.data.copy_(p_data_fp32)
+
+        return loss
+
+class Lookahead(Optimizer):
+    def __init__(self, optimizer, alpha=0.5, k=6):
+
+        if not 0.0 <= alpha <= 1.0:
+            raise ValueError(f'Invalid slow update rate: {alpha}')
+        if not 1 <= k:
+            raise ValueError(f'Invalid lookahead steps: {k}')
+
+        self.optimizer = optimizer
+        self.param_groups = self.optimizer.param_groups
+        self.alpha = alpha
+        self.k = k
+        for group in self.param_groups:
+            group["step_counter"] = 0
+
+        self.slow_weights = [
+                [p.clone().detach() for p in group['params']]
+            for group in self.param_groups]
+
+        for w in it.chain(*self.slow_weights):
+            w.requires_grad = False
+        self.state = optimizer.state
+
+    def step(self, closure=None):
+        loss = None
+        if closure is not None:
+            loss = closure()
+        loss = self.optimizer.step()
+
+        for group,slow_weights in zip(self.param_groups,self.slow_weights):
+            group['step_counter'] += 1
+            if group['step_counter'] % self.k != 0:
+                continue
+            for p,q in zip(group['params'],slow_weights):
+                if p.grad is None:
+                    continue
+                q.data.add_(p.data - q.data, alpha=self.alpha )
+                p.data.copy_(q.data)
+        return loss
 
 def seq_focal_cross_entropy_loss(logit, truth):
     gamma = 1.0 # {0.5,1.0}
@@ -86,7 +192,18 @@ def seq_focal_cross_entropy_loss(logit, truth):
     logp = logp.gather(1, truth.reshape(-1,1)).reshape(-1)
     p = logp.exp()
 
-    loss = - ((1 - p) ** gamma)*logp  #anti-focal
+    loss = - ((1 - p) ** gamma)*logp  #focal
+    loss = loss.mean()
+    return loss
+
+def seq_anti_focal_cross_entropy_loss(logit, truth):
+    gamma = 1.0 # {0.5,1.0}
+
+    logp = F.log_softmax(logit, -1)
+    logp = logp.gather(1, truth.reshape(-1,1)).reshape(-1)
+    p = logp.exp()
+
+    loss = - ((1 + p) ** gamma)*logp  # anti-focal
     loss = loss.mean()
     return loss
 
@@ -115,43 +232,39 @@ def train_fn(train_loader, encoder, decoder, criterion,
         batch_size    = images.size(0)
         
         features = encoder(images)
-        predictions, caps_sorted, decode_lengths, alphas, sort_ind = decoder(features, labels, label_lengths)
+        predictions, caps_sorted, decode_lengths = decoder(features, labels, label_lengths)
         targets     = caps_sorted[:, 1:]
 
-         #############noise injection, exposure bias###############
-        if CFG.noise_injection:
+        #############teacher forcing, exposure bias###############
+        if CFG.teacher_forcing:
             predict = predictions.argmax(-1)
             
             a = (torch.rand(caps_sorted[:, 1:].shape)>0.8).float().to(CFG.device)
             fake_labels = caps_sorted.clone()
-   
-            fake_labels[:, 1:] = a*fake_labels[:, 1:] + (1-a)*predict[:,:]
-            predictions2, caps_sorted2, decode_lengths2, alphas2, sort_ind2 = decoder(features, fake_labels, label_lengths)
+            fake_labels[:, 1:] = a*fake_labels[:, 1:] + (1-a)*predict[:,:-1]
+            predictions2, caps_sorted2, decode_lengths2 = decoder(features, fake_labels, label_lengths)
             targets2 = caps_sorted2[:, 1:]
+
         ###########################################################
 
         predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data
         targets     = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
-        
+      
         ###########################################################
-        if CFG.noise_injection:
+        if CFG.teacher_forcing:
             predictions2 = pack_padded_sequence(predictions2, decode_lengths2, batch_first=True).data
             targets2     = pack_padded_sequence(targets2, decode_lengths2, batch_first=True).data
         ###########################################################
 
-        #calculate loss
         loss        = criterion(predictions, targets)
 
-        # Add doubly stochastic attention regularization
-        alpha_c = 1. # # regularization parameter for 'doubly stochastic attention', as in the paper
-        loss += alpha_c * ((1. - alphas.sum(dim=1)) ** 2).mean()
-
         ###########################################################
-        if CFG.noise_injection:
+        if CFG.teacher_forcing:
             loss2       = criterion(predictions2, targets2)
             loss        = loss + 0.1*loss2
         ###########################################################
 
+        
 
         # record loss
         losses.update(loss.item(), batch_size)
@@ -172,6 +285,8 @@ def train_fn(train_loader, encoder, decoder, criterion,
             decoder_optimizer.step()
             encoder_optimizer.zero_grad()
             decoder_optimizer.zero_grad()
+            # encoder_scheduler.step()
+            # decoder_scheduler.step()
             global_step += 1
             
         # measure elapsed time
@@ -223,10 +338,9 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
         
         with torch.no_grad():
             features    = encoder(images)
-            predictions = decoder.predict(features, CFG.max_len, tokenizer)
-        predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
-        _text_preds        = tokenizer.predict_captions(predicted_sequence)
-        
+            predictions, logits = decoder.predict(features, tokenizer)
+
+        _text_preds        = tokenizer.predict_captions(predictions.detach().cpu().numpy())
         text_preds.append(_text_preds)
         
         # measure elapsed time
@@ -267,7 +381,6 @@ def train_loop(folds, fold):
     # ====================================================
     # loader
     # ====================================================
-    
     trn_idx = folds[folds['fold'] != fold].index
     val_idx = folds[folds['fold'] == fold].index
    
@@ -321,55 +434,56 @@ def train_loop(folds, fold):
     # model & optimizer
     # ====================================================
 
-#    states = torch.load(CFG.prev_model,  map_location=torch.device('cpu'))
+    # states = torch.load('/home/tinvn/TIN/VLSP_ImageCaptioning/vlsp_code2/swin_transformerdeocder_fold0_best.pth',  map_location=torch.device('cpu'))
 
-#     encoder = Encoder(CFG.model_name, 
-#                       pretrained = True)
+    # encoder
     encoder = CNN(is_pretrained=True, type_=CFG.model_name)
-#    encoder.load_state_dict(states['encoder'])
+    # encoder.load_state_dict(states['encoder'])
     
     encoder.to(device)
     encoder_optimizer = Adam(encoder.parameters(), 
                              lr           = CFG.encoder_lr, 
                              weight_decay = CFG.weight_decay, 
                              amsgrad      = False)
-#    encoder_optimizer.load_state_dict(states['encoder_optimizer'])
+    # encoder_optimizer.load_state_dict(states['encoder_optimizer'])
     encoder_scheduler = get_scheduler(encoder_optimizer)
-#    encoder_scheduler.load_state_dict(states['encoder_scheduler'])
-    
-    decoder = DecoderWithAttention(attention_dim = CFG.attention_dim, 
-                                   embed_dim     = CFG.embed_dim, 
-                                   encoder_dim   = CFG.enc_size,
-                                   decoder_dim   = CFG.decoder_dim,
-                                   num_layers    = CFG.decoder_layers,
-                                   vocab_size    = len(tokenizer), 
-                                   dropout       = CFG.dropout, 
-                                   device        = device)
-#    decoder.load_state_dict(states['decoder'])
+    # encoder_scheduler.load_state_dict(states['encoder_scheduler'])
+
+    # decoder
+    decoder = Net(  max_length                   = CFG.max_len,
+                    embed_dim                    = CFG.embed_dim,
+                    vocab_size                   = len(tokenizer),
+                    decoder_dim                  = CFG.decoder_dim,
+                    ff_dim                       = CFG.ff_dim,
+                    num_head                     = CFG.num_head,
+                    num_layer                    = CFG.num_layer,
+                    device                       = device)
+    # decoder.load_state_dict(states['decoder'])
     decoder.to(device)
-    decoder_optimizer = Adam(decoder.parameters(), 
-                             lr           = CFG.decoder_lr, 
-                             weight_decay = CFG.weight_decay, 
-                             amsgrad      = False)
-#    decoder_optimizer.load_state_dict(states['decoder_optimizer'])
+    # decoder_optimizer = Adam(decoder.parameters(), 
+    #                          lr           = CFG.decoder_lr, 
+    #                          weight_decay = CFG.weight_decay, 
+    #                          amsgrad      = False)
+    decoder_optimizer = Lookahead(RAdam(filter(lambda p: p.requires_grad, decoder.parameters()), weight_decay=CFG.weight_decay, lr=CFG.decoder_lr), alpha=0.5, k=5)
+    # decoder_optimizer.load_state_dict(states['decoder_optimizer'])
 
     decoder_scheduler = get_scheduler(decoder_optimizer)
- #   decoder_scheduler.load_state_dict(states['decoder_scheduler'])
+    # decoder_scheduler.load_state_dict(states['decoder_scheduler'])
 
     # ====================================================
     # loop
     # ====================================================
     criterion = nn.CrossEntropyLoss(ignore_index = tokenizer.stoi["<pad>"])
     # criterion = seq_anti_focal_cross_entropy_loss
-    # criterion = seq_focal_cross_entropy_loss
 
-    best_score = 0 #np.inf
-    
+    best_score = 0 #np.inf #0
+    epochs_since_improvement = 0
+
     for epoch in range(CFG.epochs):
         print("Epoch: ", epoch)
         start_time = time.time()
         # train
-        avg_loss = train_fn(train_loader, encoder, decoder, criterion,
+        avg_loss = train_fn(train_loader, encoder, decoder, criterion, 
                             encoder_optimizer, decoder_optimizer, epoch, 
                             encoder_scheduler, decoder_scheduler, device)
 
@@ -382,7 +496,6 @@ def train_loop(folds, fold):
         # scoring
         # score = get_score_levenshtein(valid_labels, text_preds)
         score = get_score_bleu(valid_labels, text_preds)
-        # score = get_corpus_bleu(valid_labels, text_preds)
         
         if isinstance(encoder_scheduler, ReduceLROnPlateau):
             encoder_scheduler.step(score)
@@ -401,12 +514,13 @@ def train_loop(folds, fold):
         elapsed = time.time() - start_time
 
         LOGGER.info(f'Epoch {epoch+1} - avg_train_loss: {avg_loss:.4f}  time: {elapsed:.0f}s')
-        LOGGER.info(f'Epoch {epoch+1} - Score: {score} - Best Score: {best_score}')
+        LOGGER.info(f'Epoch {epoch+1} - Score: {score:.4f} - Best Score: {best_score:.4f}')
         
-        if score > best_score: # < for Levenhstein, > for BLEU
+        is_best = best_score < score
+        if is_best:
             best_score = score
             LOGGER.info(f'Epoch {epoch+1} - Save Best Score: {best_score:.4f} Model')
-        if epoch == 7:
+
             torch.save({'encoder': encoder.state_dict(), 
                         'encoder_optimizer': encoder_optimizer.state_dict(), 
                         'encoder_scheduler': encoder_scheduler.state_dict(), 
@@ -415,8 +529,8 @@ def train_loop(folds, fold):
                         'decoder_scheduler': decoder_scheduler.state_dict(), 
                         'text_preds': text_preds,
                         },
-                        OUTPUT_DIR+f'{CFG.model_name}_fold{fold}_epoch{epoch}_best_remove_english.pth')
-                        # OUTPUT_DIR+f'{CFG.model_name}_fold{fold}_best_remove_english.pth')
+                        OUTPUT_DIR+f'{CFG.model_name}_transformerdeocder_fold{fold}_best.pth')
+        
 
     print("End train loop")
 
@@ -426,10 +540,12 @@ def train_loop(folds, fold):
 def get_train_file_path(image_id):
     return CFG.train_path + "/images_train/{}".format(image_id)
 
-# train = pd.read_pickle('./train_files/train_vi_fix_special_nouns.pkl')
+# train = pd.read_pickle('./train_files/train.pkl')
+
 # train['file_path'] = train['id'].apply(get_train_file_path)
-# print("Min length is: ", train['length'].min())
-# print("Max length is: ", train['length'].max())
+# print(train['length'].min())
+# print(f'train.shape: {train.shape}')
+
 
 df = pd.read_csv('./train_files/train_captions.csv')
 
@@ -458,10 +574,7 @@ train = read_data(df)
 
 train['file_path'] = train['id'].apply(get_train_file_path)
 print(train['length'].min())
-print(train['length'].max())
-print(train['length'].mean())
 print(f'train.shape: {train.shape}')
-
 
 # ---------------- CALCULATE MEAN, STD---------------------
 def calculate_mean_std(): # should use Imagenet mean and std
