@@ -14,7 +14,7 @@ sys.path.append('../input/timm-pytorch-image-models/pytorch-image-models-master'
 import os
 import random
 
-
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
@@ -44,6 +44,56 @@ def seed_torch(seed=42):
     torch.backends.cudnn.deterministic = True
 
 seed_torch(seed = CFG.seed)
+
+#show the tensor image
+def show_image(img, title=None):
+    """Imshow for Tensor."""
+    
+    #unnormalize 
+    img[0] = img[0] * 0.229
+    img[1] = img[1] * 0.224 
+    img[2] = img[2] * 0.225 
+    img[0] += 0.485 
+    img[1] += 0.456 
+    img[2] += 0.406
+    
+    img = img.detach().cpu().numpy().transpose((1, 2, 0))
+    
+    
+    plt.imshow(img)
+    if title is not None:
+        plt.title(title)
+    # plt.pause(0.01)  # pause a bit so that plots are updated
+
+#Show attention
+def plot_attention(img, result, attention_plot):
+    #untransform
+    img[0] = img[0] * 0.229
+    img[1] = img[1] * 0.224 
+    img[2] = img[2] * 0.225 
+    img[0] += 0.485 
+    img[1] += 0.456 
+    img[2] += 0.406
+    
+    img = img.detach().cpu().numpy().transpose((1, 2, 0))
+  
+    temp_image = img
+
+    fig = plt.figure(figsize=(15, 15))
+    result = result.split(' ')
+    
+    len_result = len(result)
+    for l in range(len_result):
+        temp_att = attention_plot[l].reshape(7,7)
+        
+        ax = fig.add_subplot(len_result // 2,len_result // 2, l+1)
+        ax.set_title(result[l])
+        img = ax.imshow(temp_image)
+        ax.imshow(temp_att, cmap='gray', alpha=0.5, extent=img.get_extent())
+        
+
+    plt.tight_layout()
+    plt.show()
 
 def inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer, device, beam_size=3):
 
@@ -184,7 +234,7 @@ def inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer,
     
     return hypotheses
 
-def inference(test_loader, encoder, decoder, tokenizer, device):
+def inference(test_loader, encoder, decoder, tokenizer, device, show=False):
     
     encoder.eval()
     decoder.eval()
@@ -198,10 +248,14 @@ def inference(test_loader, encoder, decoder, tokenizer, device):
         
         with torch.no_grad():
             features = encoder(images)
-            predictions = decoder.predict(features, CFG.max_len, tokenizer)
+            predictions, alpha = decoder.predict(features, CFG.max_len, tokenizer)
             
         predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
         _text_preds = tokenizer.predict_captions(predicted_sequence)
+        if show:
+            show_image(images[0],title=_text_preds[0])
+            plot_attention(images[0], _text_preds[0], alpha)
+
         text_preds.append(_text_preds)
         
     text_preds = np.concatenate(text_preds)
@@ -287,8 +341,8 @@ if CFG.ensemble == False:
     gc.collect()
 
     # Inference
-    predictions  = inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer, device, beam_size=2)
-    # predictions = inference(test_loader, encoder, decoder, tokenizer, device)
+    # predictions  = inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer, device, beam_size=2)
+    predictions = inference(test_loader, encoder, decoder, tokenizer, device)
 else:
     print("Predicting with Ensemble.....")
     model1 = './pretrained_models/swin_fold1_best.pth'

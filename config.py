@@ -42,6 +42,6 @@ class CFG:
     # test_path      = '../data/vietcap4h-public-test/'
     prep_path      = './preprocessed-stuff/'
     tokenizer_path = './tokenizers/tokenizer_vi_fix_error_english2.pth'
-    prev_model     =  'swin_fold2_epoch14_best_remove_english.pth'
+    prev_model     =  '/home/tinvn/TIN/VLSP_ImageCaptioning/vlsp_code/pretrained_models/swin_fold1_epoch11_best_remove_english_292646.pth'
 
     device         = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')

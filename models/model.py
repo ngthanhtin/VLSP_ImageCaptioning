@@ -235,6 +235,7 @@ class DecoderWithAttention(nn.Module):
         h, c        = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
         predictions = torch.zeros(batch_size, decode_lengths, vocab_size, device = self.device)
         
+        alphas = []
         # predict sequence
         end_condition = torch.zeros(batch_size, dtype=torch.long, device = self.device)
         for t in range(decode_lengths):
@@ -242,6 +243,8 @@ class DecoderWithAttention(nn.Module):
             gate       = self.sigmoid(self.f_beta(h[-1]))    # gating scalar, (s, encoder_dim)
             awe        = gate * awe
             
+            alphas.append(alpha.cpu().detach().numpy())
+
             input = torch.cat([embeddings, awe], dim=1)
  
             for j, rnn in enumerate(self.decode_step):
@@ -257,5 +260,5 @@ class DecoderWithAttention(nn.Module):
                 break
             embeddings = self.embedding(torch.argmax(preds, -1))
         
-        return predictions
+        return predictions, alphas
     
