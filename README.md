@@ -6,8 +6,8 @@ https://aihub.vn/competitions/40#participate
 
 # Dependencies
 `pip install timm`
-Download tokenizer from: ![tokenizer link](https://drive.google.com/file/d/1de3lxn78g4OFWFwpDaFkg6L4jg4xaXpu/view?usp=sharing) and put it in: `tokenizers` folder. <br/>
-Download pretrained weights from: ![pretrained link](https://drive.google.com/file/d/1pI4h_REpyWQzcOvGJP7dQCf4lG4oCrwK/view?usp=sharing) and put it in `pretrained_models` folder.
+Download tokenizer from: [tokenizer link](https://drive.google.com/file/d/1de3lxn78g4OFWFwpDaFkg6L4jg4xaXpu/view?usp=sharing) and put it in: `tokenizers` folder. <br/>
+Download pretrained weights from: [pretrained link](https://drive.google.com/file/d/1pI4h_REpyWQzcOvGJP7dQCf4lG4oCrwK/view?usp=sharing) and put it in `pretrained_models` folder.
 
 # Prepare data
 In this repo, I convert the json to csv format for easy processing.</br>
