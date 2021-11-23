@@ -1,3 +1,7 @@
 timm
-pytorch
+pytorch == 1.9.0
 opencv-python
+scikit-learn
+numpy
+pandas
+tqdm
