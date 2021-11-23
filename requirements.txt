@@ -1,0 +1,3 @@
+timm
+pytorch
+opencv-python
