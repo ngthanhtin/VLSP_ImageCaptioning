@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 
 import sys
-sys.path.append('../input/timm-pytorch-image-models/pytorch-image-models-master')
 
 import os
 import time
@@ -425,11 +424,6 @@ def train_loop(folds, fold):
 #---------READ DATA--------------------
 def get_train_file_path(image_id):
     return CFG.train_path + "/images_train/{}".format(image_id)
-
-# train = pd.read_pickle('./train_files/train_vi_fix_special_nouns.pkl')
-# train['file_path'] = train['id'].apply(get_train_file_path)
-# print("Min length is: ", train['length'].min())
-# print("Max length is: ", train['length'].max())
 
 df = pd.read_csv('./train_files/train_captions.csv')
 

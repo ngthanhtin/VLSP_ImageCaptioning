@@ -298,8 +298,8 @@ def ensemble_inference(test_loader, encoder1, decoder1, encoder2, decoder2, toke
     return text_preds
     
 # ------------------READ DATA---------------
-df = pd.read_csv('../data/vietcap4h-private-test/vietcap4h-private-test/private_captions.csv')
-# df = pd.read_csv('../data/vietcap4h-public-test/test_captions.csv')
+df = pd.read_csv('../train_files/private_captions.csv')
+# df = pd.read_csv('../train_files/test_captions.csv')
 
 def get_test_file_path(image_id):
     # return CFG.test_path + "/images_public_test/{}".format(image_id)
@@ -342,7 +342,7 @@ if CFG.ensemble == False:
 
     # Inference
     # predictions  = inference_with_batched_beam_search(test_loader, encoder, decoder, tokenizer, device, beam_size=2)
-    predictions = inference(test_loader, encoder, decoder, tokenizer, device)
+    predictions = inference(test_loader, encoder, decoder, tokenizer, device, show=True)
 else:
     print("Predicting with Ensemble.....")
     model1 = './pretrained_models/swin_fold1_best.pth'

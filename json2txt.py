@@ -24,8 +24,8 @@ def json2txt(src, dest):
     df.to_csv(dest)
 
 if __name__ == '__main__':
-    # file_path = "/home/tinvn/TIN/VLSP_ImageCaptioning/data/vietcap4h-public-test/sample_submission.json"
+    # file_path = "../data/vietcap4h-public-test/sample_submission.json"
     # file_path = "../data/viecap4h-public-train/viecap4h-public-train/train_captions.json"
     file_path = "../data/vietcap4h-private-test/vietcap4h-private-test/private_sample_sub.json"
-    dest_path = './private_captions.csv'
+    dest_path = './train_files/private_captions.csv'
     json2txt(file_path, dest_path)

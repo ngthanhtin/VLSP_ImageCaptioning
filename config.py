@@ -40,8 +40,7 @@ class CFG:
     train_path     = '../data/viecap4h-public-train/viecap4h-public-train/'
     test_path      = '../data/vietcap4h-private-test/vietcap4h-private-test/'
     # test_path      = '../data/vietcap4h-public-test/'
-    prep_path      = './preprocessed-stuff/'
     tokenizer_path = './tokenizers/tokenizer_vi_fix_error_english2.pth'
-    prev_model     =  '/home/tinvn/TIN/VLSP_ImageCaptioning/vlsp_code/pretrained_models/swin_fold1_epoch11_best_remove_english_292646.pth'
+    prev_model     =  './pretrained_models/swin_fold1_epoch11_best_remove_english_292646.pth'
 
     device         = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
