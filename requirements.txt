@@ -5,3 +5,6 @@ scikit-learn
 numpy
 pandas
 tqdm
+json
+albumentations
+fairseq
