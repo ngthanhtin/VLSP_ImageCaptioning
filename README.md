@@ -5,9 +5,7 @@ https://aihub.vn/competitions/40#participate
 ![Drag Racing](https://github.com/ngthanhtin/VLSP_ImageCaptioning/blob/master/image/image_captioning_vlsp.png?raw=true)
 
 # Dependencies
-`conda create -n vlsp_vic python=3.7` <br/>
-`conda activate vlsp_vic` <br/>
-`conda install pytorch==1.7.1 torchvision==0.8.2 torchaudio==0.7.2 cudatoolkit=10.1 -c pytorch` <br/>
+`pip install torch torchvision torchaudio` <br/>
 `pip install -r requirements.txt` <br/>
 Download tokenizer from: [tokenizer link](https://drive.google.com/file/d/1de3lxn78g4OFWFwpDaFkg6L4jg4xaXpu/view?usp=sharing) and put it in: `tokenizers` folder. <br/>
 Download pretrained weights from: [pretrained link](https://drive.google.com/file/d/1pI4h_REpyWQzcOvGJP7dQCf4lG4oCrwK/view?usp=sharing) and put it in `pretrained_models` folder.
