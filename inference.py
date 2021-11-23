@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 
 import sys
-sys.path.append('../input/timm-pytorch-image-models/pytorch-image-models-master')
 
 import os
 import random
