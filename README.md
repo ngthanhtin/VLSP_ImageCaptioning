@@ -37,6 +37,8 @@ This code uses Swin Transformer (you can change to other types of Transformer) a
 # Training
 Run `train.py` to train with the train data. Make sure that you already have the tokenizers file.
 
+To reproduce our result on the private board, please make sure to train `fold 2` which is specified in `config.py`, and get the weight at the `epoch 11`.
+
 # Inference
 Run `inference.py`. Noted that we currently dont support the ensemble version, but if you want to do it, set the `ensemble` parameter in `config.py` to True.
 
