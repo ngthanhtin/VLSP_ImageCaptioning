@@ -49,11 +49,42 @@ Achieved 0.293 BLEU4 for Private Dataset. As a result, I achived the 3rd on the 
 
 # Citation
 If you find this code useful for your work, please consider citing:
+## Preprint version
 ```
-@inproceedings{tin2021vieCap4H,
-  title={Image Captioning Using Swin Transformer Encoder and LSTM Attention Decoder},
-  author={Thanh Tin Nguyen},
-  booktitle={VLSP2021 vieCap4H Challenge: Automatic image caption generation for healthcare domains in Vietnamese},
-  year={2021}
+@article{DBLP:journals/corr/abs-2209-01304,
+  author    = {Thanh Tin Nguyen and
+               Long H. Nguyen and
+               Nhat Truong Pham and
+               Liu Tai Nguyen and
+               Van Huong Do and
+               Hai Nguyen and
+               Ngoc Duy Nguyen},
+  title     = {vieCap4H-VLSP 2021: Vietnamese Image Captioning for Healthcare Domain
+               using Swin Transformer and Attention-based {LSTM}},
+  journal   = {CoRR},
+  volume    = {abs/2209.01304},
+  year      = {2022},
+  url       = {https://doi.org/10.48550/arXiv.2209.01304},
+  doi       = {10.48550/arXiv.2209.01304},
+  eprinttype = {arXiv},
+  eprint    = {2209.01304},
+  timestamp = {Mon, 26 Sep 2022 18:12:06 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/abs-2209-01304.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+```
+## Published version
+```
+@article{JCSCE,
+	author = {Nguyen Tin and Nguyen H. and Pham Truong and Nguye Tai and Do Huong and Nguyen Hai and Nguyen Duy},
+	title = {vieCap4H Challenge 2021: Vietnamese Image Captioning for Healthcare Domain using Swin Transformer and Attention-based LSTM},
+	journal = {VNU Journal of Science: Computer Science and Communication Engineering},
+	volume = {38},
+	number = {2},
+	year = {2022},
+	keywords = {},
+	abstract = {This study presents our approach on the automatic Vietnamese image captioning for healthcare domain in text processing tasks of Vietnamese Language and Speech Processing (VLSP) Challenge 2021, as shown in Figure~\ref\{fig:example\}. In recent years, image captioning often employs a convolutional neural network-based architecture as an encoder and a long short-term memory (LSTM) as a decoder to generate sentences. These models perform  remarkably well in different datasets. Our proposed model also has an encoder and a decoder, but we instead use a Swin Transformer in the encoder, and a LSTM combined with an attention module in the decoder. The study presents our training experiments and techniques used during the competition. Our model achieves a BLEU4 score of 0.293 on the vietCap4H dataset, and the score is ranked the 3\$^\{rd\}\$ place on the private leaderboard. Our code can be found at \url\{https://git.io/JDdJm\}.},
+	issn = {2588-1086},	doi = {10.25073/2588-1086/vnucsce.369},
+	url = {//jcsce.vnu.edu.vn/index.php/jcsce/article/view/369}
 }
 ```
